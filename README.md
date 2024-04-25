@@ -9,3 +9,5 @@ This code makes use of libsndfile, which is released under the <a href=https://w
 Several StackOverflow posts were cited in the making of this program, all of which are linked in the relevant sections of the source code.
 
 Due to limitations of the in-built C++ sound interface library, this code only works with .wav files. I recommend using <a href=https://ffmpeg.org>ffmpeg</a> in order to <a href=https://www.wikihow.com/Install-FFmpeg-on-Windows>convert other</a> <a href=https://stackoverflow.com/questions/5784661/how-do-you-convert-an-entire-directory-with-ffmpeg>filetypes</a> into wavs.
+
+Part of the gitignore for this project was copied from <a href=https://github.com/github/gitignore/blob/main/VisualStudio.gitignore>the VS gitignore, as listed on github</a>.

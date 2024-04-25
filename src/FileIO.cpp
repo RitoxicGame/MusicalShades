@@ -1,6 +1,6 @@
 #define BOOST_FILESYSTEM_VERSION 3
 #define BOOST_FILESYSTEM_NO_DEPRECATED
-#include <boost>
+//#include <boost>
 
 #include "FileIO.h"
 
@@ -31,8 +31,9 @@ void FileIO::create(string dir)
 
 list<string> FileIO::filelookup(string ext)
 {
-	std::string path(directory);
-	std::string ext(ext);
+	//std::string path(directory);
+	//std::string ext(ext);
 
 	//for(auto &p : 
+	return { "" };
 }

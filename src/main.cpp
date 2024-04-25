@@ -123,18 +123,32 @@ Mesh g_mesh;
 
 wstring beef;
 
-const float THETA_0 = pi<float>() / 4.0f;
+const float THETA_0 = pi<float>() / 4.0f; //about y
 float theta = THETA_0;
 
-const float THETAALT_0 = 3 * pi<float>() / 4.0f;
+const float THETAALT_0 = 3 * pi<float>() / 4.0f; //about x
 float thetaAlt = THETAALT_0;
+
+const float THETAALT2_0 = pi<float>() / 2.0f; //about z
+float thetaAlt2 = THETAALT2_0;
+
+const float THETAALT3_0 = 5 * pi<float>() / 4.0f; //about y (#2)
+float thetaAlt3 = THETAALT3_0;
+
+const float THETAALT4_0 = 7 * pi<float>() / 4.0f; //about x (#2)
+float thetaAlt4 = THETAALT4_0;
+
+const float THETAALT5_0 = 3 * pi<float>() / 2.0f; //about z (#2)
+float thetaAlt5 = THETAALT5_0;
 
 float deltaT;
 float oldT = 0;
 
-const float ORBIT_RAD = 7.0f;
+//base orbit radius
+const float MIN_ORBIT_RAD = 7.0f;
+float orbitrad = MIN_ORBIT_RAD;
 
-//divisor for 
+//divisors for orbit speed -- higher number = slower orbit
 const float ORBIT_SPD_SLOW = 1200;
 const float ORBIT_SPD_MED = 600;
 const float ORBIT_SPD_FAST = 300;
@@ -142,12 +156,42 @@ const float ORBIT_SPD_ULTRA = 150;
 
 float orbitSpeedDenom;
 
-vec3 g_lightPos = vec3(ORBIT_RAD * std::cos(theta), 0, ORBIT_RAD * std::sin(theta));
-vec3 g_lightPosAlt = vec3(0, ORBIT_RAD * std::sin(thetaAlt), ORBIT_RAD * std::cos(thetaAlt));
+//orbiting y
+vec3 g_lightPos = vec3(
+	orbitrad * std::cos(theta), 
+	0.0f, 
+	orbitrad * std::sin(theta));
 
-bool swap_lights = false;
+vec3 g_lightPosAlt3 = vec3(
+	orbitrad * std::cos(thetaAlt3), 
+	0.0f, 
+	orbitrad * std::sin(thetaAlt3));
 
-AudioHandler ah; //string audio_file;
+//orbiting x
+vec3 g_lightPosAlt = vec3(
+	0.0f, 
+	orbitrad * std::sin(thetaAlt), 
+	orbitrad * std::cos(thetaAlt));
+
+vec3 g_lightPosAlt4 = vec3(
+	0.0f, 
+	orbitrad * std::sin(thetaAlt4), 
+	orbitrad * std::cos(thetaAlt4));
+
+//orbiting z
+vec3 g_lightPosAlt2 = vec3(
+	orbitrad * std::cos(thetaAlt2), 
+	orbitrad * std::sin(thetaAlt2), 
+	0.0f);
+
+vec3 g_lightPosAlt5 = vec3(
+	orbitrad * std::cos(thetaAlt5), 
+	orbitrad * std::sin(thetaAlt5), 
+	0.0f);
+
+int swap_lights = 0;
+
+AudioHandler ah; //audio handler -- holds song list, plays music, and parses song data
 
 float g_time = 0.0f;
 
@@ -159,7 +203,7 @@ void initialization()
 	deltaT = clock() - oldT;
 	oldT = clock();
 	
-	orbitSpeedDenom = ORBIT_SPD_MED;
+	orbitSpeedDenom = ORBIT_SPD_MED; //default to medium orbit speed
 
 	ah.create(
 		{
@@ -223,17 +267,34 @@ void display()
 	{
 		theta += ((pi<float>() * deltaT) / orbitSpeedDenom);
 		thetaAlt += ((pi<float>() * deltaT) / orbitSpeedDenom);
+		thetaAlt2 += ((pi<float>() * deltaT) / orbitSpeedDenom);
+		thetaAlt3 += ((pi<float>() * deltaT) / orbitSpeedDenom);
+		thetaAlt4 += ((pi<float>() * deltaT) / orbitSpeedDenom);
+		thetaAlt5 += ((pi<float>() * deltaT) / orbitSpeedDenom);
 
 		if (theta >= (2 * pi<float>())) theta -= (2 * pi<float>());
 		if (thetaAlt >= (2 * pi<float>())) thetaAlt -= (2 * pi<float>());
 
-		g_lightPos.x = ORBIT_RAD * std::cos(theta);
-		g_lightPos.z = ORBIT_RAD * std::sin(theta);
+		g_lightPos.x = orbitrad * std::cos(theta);
+		g_lightPos.z = orbitrad * std::sin(theta);
 		//g_lightPos.x += -1 * std::sin(theta);
 		//g_lightPos.z += std::cos(theta);
 
-		g_lightPosAlt.y = ORBIT_RAD * std::sin(thetaAlt);
-		g_lightPosAlt.z = ORBIT_RAD * std::cos(thetaAlt);
+		g_lightPosAlt.y = orbitrad * std::sin(thetaAlt);
+		g_lightPosAlt.z = orbitrad * std::cos(thetaAlt);
+
+		g_lightPosAlt2.x = orbitrad * std::cos(thetaAlt2);
+		g_lightPosAlt2.y = orbitrad * std::sin(thetaAlt2);
+
+		g_lightPosAlt3.x = orbitrad * std::cos(thetaAlt3);
+		g_lightPosAlt3.z = orbitrad * std::sin(thetaAlt3);
+
+		g_lightPosAlt4.y = orbitrad * std::sin(thetaAlt4);
+		g_lightPosAlt4.z = orbitrad * std::cos(thetaAlt4);
+
+		g_lightPosAlt5.x = orbitrad * std::cos(thetaAlt5);
+		g_lightPosAlt5.y = orbitrad * std::sin(thetaAlt5);
+
 	}
 
 	// add any stuff you'd like to draw	
@@ -246,17 +307,39 @@ void display()
 	glPushMatrix();
 	glLoadMatrixf(value_ptr(g_cam.viewMat));
 	glPushMatrix();
+	glPushMatrix();
+	glPushMatrix();
+	glPushMatrix();
+	glPushMatrix();
 
-	glColor3f(1, 1, 0);
-	
+	glColor3f(1, 1, 0); //set up light 0 (yellow, orbit y)
 	glTranslatef(g_lightPos.x, g_lightPos.y, g_lightPos.z);
-	(!swap_lights ? glutSolidSphere : glutWireSphere)(0.3, 8, 8);
+	(swap_lights == 0 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
 
 	glPopMatrix();
-	glColor3f(1, 0, 1);
-
+	glColor3f(1, 0, 1); //set up light 1 (magenta, orbit x)
 	glTranslatef(g_lightPosAlt.x, g_lightPosAlt.y, g_lightPosAlt.z);
-	(!swap_lights ? glutWireSphere : glutSolidSphere)(0.3, 8, 8);
+	(swap_lights == 1 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
+
+	glPopMatrix();
+	glColor3f(0, 1, 1); //set up light 2 (cyan, orbit z)
+	glTranslatef(g_lightPosAlt2.x, g_lightPosAlt2.y, g_lightPosAlt2.z);
+	(swap_lights == 2 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
+
+	glPopMatrix();
+	glColor3f(0, 0, 1); //set up light 3 (blue, orbit y)
+	glTranslatef(g_lightPosAlt3.x, g_lightPosAlt3.y, g_lightPosAlt3.z);
+	(swap_lights == 3 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
+
+	glPopMatrix();
+	glColor3f(0, 1, 0); //set up light 4 (green, orbit x)
+	glTranslatef(g_lightPosAlt4.x, g_lightPosAlt4.y, g_lightPosAlt4.z);
+	(swap_lights == 4 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
+
+	glPopMatrix();
+	glColor3f(1, 0, 0); //set up light 3 (red, orbit z)
+	glTranslatef(g_lightPosAlt5.x, g_lightPosAlt5.y, g_lightPosAlt5.z);
+	(swap_lights == 5 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
 
 	glPopMatrix();
 
@@ -322,8 +405,11 @@ void display()
 	g_time = (float)glutGet(GLUT_ELAPSED_TIME)/1000.0f;
 	//g_mesh.draw(g_cam.viewMat, g_cam.projMat, g_lightPos, g_time);
 
-	g_mesh.drawAlt(g_cam.viewMat, g_cam.projMat, g_lightPos, g_lightPosAlt, vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), g_time);
-	//g_mesh2.drawAlt(g_cam.viewMat, g_cam.projMat, g_lightPos, g_lightPosAlt, vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), g_time);
+	g_mesh.draw(g_cam.viewMat, g_cam.projMat, 
+		{ g_lightPos, g_lightPosAlt, g_lightPosAlt2, g_lightPosAlt3, g_lightPosAlt4, g_lightPosAlt5 }, /*list of light position vectors*/
+		vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), 
+		g_time);
+	//g_mesh2.draw(g_cam.viewMat, g_cam.projMat, g_lightPos, g_lightPosAlt, vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), g_time);
 
     glutSwapBuffers();
 }
@@ -489,7 +575,7 @@ void keyboard(unsigned char key, int x, int y)
 			exit(0);
 			break;
 		case 9:
-			swap_lights = !swap_lights;
+			swap_lights = (swap_lights++)%6;
 			break;
         case'c': // switch cam control mode
             g_cam.switchCamMode();
@@ -502,41 +588,189 @@ void keyboard(unsigned char key, int x, int y)
 			g_mesh.normal_offset += 0.01;
 			//glutPostRedisplay();
 			break;
-		case'+':
+		case'=':
 			g_mesh.normal_offset -= 0.01;
 			//glutPostRedisplay();
 			break;
 		case'r':
-			(swap_lights ? g_lightPosAlt.y : g_lightPos.y) += 0.5;
+			switch(swap_lights) 
+			{
+			case 1:
+				g_lightPos.y += 0.5f;
+				break;
+			case 2:
+				g_lightPosAlt.y += 0.5f;
+				break;
+			case 3:
+				g_lightPosAlt2.y += 0.5f;
+				break;
+			case 4:
+				g_lightPosAlt3.y += 0.5f;
+				break;
+			case 5:
+				g_lightPosAlt4.y += 0.5f;
+				break;
+			case 6:
+				g_lightPosAlt5.y += 0.5f;
+				break;
+			default:
+				break;
+			}
 			break;
 		case'f':
-			(swap_lights ? g_lightPosAlt.y : g_lightPos.y) -= 0.5;
+			switch (swap_lights)
+			{
+			case 1:
+				g_lightPos.y -= 0.5f;
+				break;
+			case 2:
+				g_lightPosAlt.y -= 0.5f;
+				break;
+			case 3:
+				g_lightPosAlt2.y -= 0.5f;
+				break;
+			case 4:
+				g_lightPosAlt3.y -= 0.5f;
+				break;
+			case 5:
+				g_lightPosAlt4.y -= 0.5f;
+				break;
+			case 6:
+				g_lightPosAlt5.y -= 0.5f;
+				break;
+			default:
+				break;
+			}
 			break;
 		case'd':
-			(swap_lights ? g_lightPosAlt.x : g_lightPos.x) += 0.5;
+			switch (swap_lights)
+			{
+			case 1:
+				g_lightPos.x += 0.5f;
+				break;
+			case 2:
+				g_lightPosAlt.x += 0.5f;
+				break;
+			case 3:
+				g_lightPosAlt2.x += 0.5f;
+				break;
+			case 4:
+				g_lightPosAlt3.x += 0.5f;
+				break;
+			case 5:
+				g_lightPosAlt4.x += 0.5f;
+				break;
+			case 6:
+				g_lightPosAlt5.x += 0.5f;
+				break;
+			default:
+				break;
+			}
 			break;
 		case'a':
-			(swap_lights ? g_lightPosAlt.x : g_lightPos.x) -= 0.5;
+			switch (swap_lights)
+			{
+			case 1:
+				g_lightPos.x -= 0.5f;
+				break;
+			case 2:
+				g_lightPosAlt.x -= 0.5f;
+				break;
+			case 3:
+				g_lightPosAlt2.x -= 0.5f;
+				break;
+			case 4:
+				g_lightPosAlt3.x -= 0.5f;
+				break;
+			case 5:
+				g_lightPosAlt4.x -= 0.5f;
+				break;
+			case 6:
+				g_lightPosAlt5.x -= 0.5f;
+				break;
+			default:
+				break;
+			}
 			break;
 		case's':
-			(swap_lights ? g_lightPosAlt.z : g_lightPos.z) += 0.5;
+			switch (swap_lights)
+			{
+			case 1:
+				g_lightPos.z += 0.5f;
+				break;
+			case 2:
+				g_lightPosAlt.z += 0.5f;
+				break;
+			case 3:
+				g_lightPosAlt2.z += 0.5f;
+				break;
+			case 4:
+				g_lightPosAlt3.z += 0.5f;
+				break;
+			case 5:
+				g_lightPosAlt4.z += 0.5f;
+				break;
+			case 6:
+				g_lightPosAlt5.z += 0.5f;
+				break;
+			default:
+				break;
+			}
 			break;
 		case'w':
-			(swap_lights ? g_lightPosAlt.z : g_lightPos.z) -= 0.5;
+			switch (swap_lights)
+			{
+			case 1:
+				g_lightPos.z -= 0.5f;
+				break;
+			case 2:
+				g_lightPosAlt.z -= 0.5f;
+				break;
+			case 3:
+				g_lightPosAlt2.z -= 0.5f;
+				break;
+			case 4:
+				g_lightPosAlt3.z -= 0.5f;
+				break;
+			case 5:
+				g_lightPosAlt4.z -= 0.5f;
+				break;
+			case 6:
+				g_lightPosAlt5.z -= 0.5f;
+				break;
+			default:
+				break;
+			}
 			break;
 		case'q':
-			(swap_lights ? 
-				thetaAlt = THETAALT_0 : 
-				theta = THETA_0);
-			(swap_lights ? 
-				g_lightPosAlt.x = 0 : 
-				g_lightPos.x = ORBIT_RAD * std::cos(theta));
-			(swap_lights ? 
-				g_lightPosAlt.y = ORBIT_RAD * std::sin(thetaAlt) : 
-				g_lightPos.y = 0);
-			(swap_lights ? 
-				g_lightPosAlt.z = ORBIT_RAD * std::cos(thetaAlt) :
-				g_lightPos.z = ORBIT_RAD * std::sin(theta));
+
+			thetaAlt5 = THETAALT5_0;
+			thetaAlt4 = THETAALT4_0;
+			thetaAlt3 = THETAALT3_0;
+			thetaAlt2 = THETAALT2_0;
+			thetaAlt = THETAALT_0;
+			theta = THETA_0;
+
+			g_lightPosAlt5.x = orbitrad * std::cos(thetaAlt5);
+			g_lightPosAlt4.x = 0;
+			g_lightPosAlt3.x = orbitrad * std::cos(thetaAlt3);
+			g_lightPosAlt2.x = orbitrad * std::cos(thetaAlt2);
+			g_lightPosAlt.x = 0;
+			g_lightPos.x = orbitrad * std::cos(theta);
+
+			g_lightPosAlt5.y = orbitrad * std::sin(thetaAlt5);
+			g_lightPosAlt4.y = orbitrad * std::sin(thetaAlt4);
+			g_lightPosAlt3.y = 0;
+			g_lightPosAlt2.y = orbitrad * std::sin(thetaAlt2);
+			g_lightPosAlt.y = orbitrad * std::sin(thetaAlt);
+			g_lightPos.y = 0;
+
+			g_lightPosAlt5.z = 0;
+			g_lightPosAlt4.z = orbitrad * std::cos(thetaAlt4);
+			g_lightPosAlt3.z = orbitrad * std::sin(thetaAlt3);
+			g_lightPosAlt2.z = 0;
+			g_lightPosAlt.z = orbitrad * std::cos(thetaAlt);
+			g_lightPos.z = orbitrad * std::sin(theta);
 			break;
 	}
 	glutPostRedisplay();

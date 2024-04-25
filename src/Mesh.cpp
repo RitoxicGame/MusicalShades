@@ -193,11 +193,51 @@ void Mesh::create(const char* filename, const char* v_shader_file, const char* f
 	prepareVBOandShaders(v_shader_file, f_shader_file);
 }
 
-void Mesh::draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time) {
+//void Mesh::draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time) { OLD FUNCTION FROM PREVIOUS ASSIGNMENT
+//
+//	glMatrixMode(GL_MODELVIEW);
+//    glPushMatrix();
+//	
+//	if (vert_num <= 0 && tri_num <= 0)
+//		return;
+//
+//	glEnable(GL_DEPTH_TEST);
+//	glEnable(GL_LIGHTING);
+//	glEnable(GL_CULL_FACE);
+//	glPolygonMode(GL_FRONT, GL_FILL);
+//
+//
+//	glMatrixMode(GL_MODELVIEW);
+//	glPushMatrix();
+//
+//	glUseProgram(shaderProg.id);
+//	mat4 m = translate(mat4(1.0), vec3(0.0f, 2.0f, 0.0f));
+//	modelMat = scale(m, vec3(0.3f, 0.3f, 0.3f));
+//	shaderProg.setMatrix4fv("modelMat", 1, value_ptr(modelMat));
+//	shaderProg.setMatrix4fv("viewMat", 1, value_ptr(viewMat));
+//	shaderProg.setMatrix4fv("projMat", 1, value_ptr(projMat));
+//	shaderProg.setFloat3V("lightPos", 1, value_ptr(lightPos));
+//	shaderProg.setFloat("time", time);
+//	shaderProg.setFloat("offset", normal_offset);
+//
+//	//cout << glm::to_string(modelMat) << endl;
+//	//cout << glm::to_string(viewMat) << endl;
+//	//cout << glm::to_string(projMat) << endl;
+//
+//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+//	glDrawElements(GL_TRIANGLES, tri_num * 3, GL_UNSIGNED_INT, NULL);
+//
+//	glPopMatrix();
+//	glDisable(GL_POLYGON_OFFSET_FILL);
+//
+//    glPopMatrix();
+//}
+
+void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, float time) {
 
 	glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-	
+	glPushMatrix();
+
 	if (vert_num <= 0 && tri_num <= 0)
 		return;
 
@@ -210,54 +250,23 @@ void Mesh::draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time) {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
-	glUseProgram(shaderProg.id);
-	mat4 m = translate(mat4(1.0), vec3(0.0f, 2.0f, 0.0f));
-	modelMat = scale(m, vec3(0.3f, 0.3f, 0.3f));
-	shaderProg.setMatrix4fv("modelMat", 1, value_ptr(modelMat));
-	shaderProg.setMatrix4fv("viewMat", 1, value_ptr(viewMat));
-	shaderProg.setMatrix4fv("projMat", 1, value_ptr(projMat));
-	shaderProg.setFloat3V("lightPos", 1, value_ptr(lightPos));
-	shaderProg.setFloat("time", time);
-	shaderProg.setFloat("offset", normal_offset);
-
-	//cout << glm::to_string(modelMat) << endl;
-	//cout << glm::to_string(viewMat) << endl;
-	//cout << glm::to_string(projMat) << endl;
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glDrawElements(GL_TRIANGLES, tri_num * 3, GL_UNSIGNED_INT, NULL);
-
-	glPopMatrix();
-	glDisable(GL_POLYGON_OFFSET_FILL);
-
-    glPopMatrix();
-}
-
-void Mesh::drawAlt(mat4 viewMat, mat4 projMat, vec3 lightPos, vec3 lightPos2, vec3 lookAt, float time) {
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-
-	if (vert_num <= 0 && tri_num <= 0)
-		return;
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_CULL_FACE);
-	glPolygonMode(GL_FRONT, GL_FILL);
-
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-
+	int j = 0;
 	glUseProgram(shaderProg.id);
 	//mat4 m = translate(mat4(1.0), vec3(0.0f, 2.0f, 0.0f));
 	//modelMat = scale(m, vec3(0.3f, 0.3f, 0.3f));
 	shaderProg.setMatrix4fv("modelMat", 1, value_ptr(modelMat));
 	shaderProg.setMatrix4fv("viewMat", 1, value_ptr(viewMat));
 	shaderProg.setMatrix4fv("projMat", 1, value_ptr(projMat));
-	shaderProg.setFloat3V("lightPos", 1, value_ptr(lightPos));
-	shaderProg.setFloat3V("lightPos2", 1, value_ptr(lightPos2));
+	for (std::list<vec3>::iterator i = lightPos.begin(); i != lightPos.end(); i++)
+	{
+		shaderProg.setFloat3V(("lightPos_" + std::to_string(j)).c_str(), 1, value_ptr(*i));
+		j++;
+		//string str = "Shader data for light at pos { "
+		//	+ std::to_string((*i).x) + ", "
+		//	+ std::to_string((*i).y) + ", "
+		//	+ std::to_string((*i).z) + " }";
+		//cout << str << endl;
+	}
 	shaderProg.setFloat3V("lookAt", 1, value_ptr(lookAt));
 	shaderProg.setFloat("time", time);
 	shaderProg.setFloat("offset", normal_offset);

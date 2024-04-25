@@ -18,6 +18,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <list>
 
 using namespace std;
 using namespace glm;
@@ -59,8 +60,8 @@ public:
     */
     void create (const char* filename, const  char* v_shader_file, const char* f_shader_file);
 
-	void draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time);
-    void drawAlt(mat4 viewMat, mat4 projMat, vec3 lightPos1, vec3 lightPos2, vec3 lookAt, float time);
+	//void draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time);
+	void draw(mat4 viewMat, mat4 projMat, list<vec3> lightpos, vec3 lookAt, float time);
 
 	//void changeColorNoiseLevel(int noiselvl);
 	void changeMeshNoiseLevel(int noiselvl);

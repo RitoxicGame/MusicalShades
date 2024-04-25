@@ -2,9 +2,13 @@
 
 uniform mat4 modelMat; 
 uniform mat4 viewMat;
-uniform mat4 projMat; 
-uniform vec3 lightPos;
-uniform vec3 lightPos2;
+uniform mat4 projMat;
+uniform vec3 lightPos_0;
+uniform vec3 lightPos_1;
+uniform vec3 lightPos_2;
+uniform vec3 lightPos_3;
+uniform vec3 lightPos_4;
+uniform vec3 lightPos_5;
 uniform float time;
 uniform float noise_level;
 
@@ -133,42 +137,81 @@ void main()
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   //*end copied bits*
   
-  
-  vec4 lpos = viewMat * vec4(lightPos, 1.0f);
-  
   vec4 ppos = viewMat * modelMat * vec4 (newPosition, 1.0f);
-  vec4 lightDir = normalize(lpos - ppos);
   
-  vec4 lpos2 = viewMat * vec4(lightPos2, 1.0f);
-  vec4 ppos2 = viewMat * modelMat * vec4 (newPosition, 1.0f);
-  vec4 lightDir2 = normalize(lpos2 - ppos2);
+  vec4 lpos_0 = viewMat * vec4(lightPos_0, 1.0f);
+  vec4 lightDir_0 = normalize(lpos_0 - ppos);
+  
+  //vec4 ppos2 = viewMat * modelMat * vec4 (newPosition, 1.0f); //redundant?
+  vec4 lpos_1 = viewMat * vec4(lightPos_1, 1.0f);
+  vec4 lightDir_1 = normalize(lpos_1 - ppos);
+  
+  vec4 lpos_2 = viewMat * vec4(lightPos_2, 1.0f);
+  vec4 lightDir_2 = normalize(lpos_2 - ppos);
+  
+  vec4 lpos_3 = viewMat * vec4(lightPos_3, 1.0f);
+  vec4 lightDir_3 = normalize(lpos_3 - ppos);
+  
+  vec4 lpos_4 = viewMat * vec4(lightPos_4, 1.0f);
+  vec4 lightDir_4 = normalize(lpos_4 - ppos);
+  
+  vec4 lpos_5 = viewMat * vec4(lightPos_5, 1.0f);
+  vec4 lightDir_5 = normalize(lpos_5 - ppos);
   
   vec4 normal = normalize (viewMat * modelMat * vec4(vertex_normal, 0.0f));
   
-  //vec4 look = normalize(vec4(lookAt, 1.0));
-  //vec4 look = normalize(vec4(0.0, 0.0, 0.0, 1.0));
+  float intensity_0 = max(dot(normal, lightDir_0), 0.0);
+  float intensity_1 = max(dot(normal, lightDir_1), 0.0);
+  float intensity_2 = max(dot(normal, lightDir_2), 0.0);
+  float intensity_3 = max(dot(normal, lightDir_3), 0.0);
+  float intensity_4 = max(dot(normal, lightDir_4), 0.0);
+  float intensity_5 = max(dot(normal, lightDir_5), 0.0);
   
-  float intensity = max(dot(normal, lightDir), 0.0);
-  float intensity2 = max(dot(normal, lightDir2), 0.0);
+  vec4 r_0 = (2 * normal * dot(normal, lightDir_0)) - lightDir_0;
+  vec4 r_1 = (2 * normal * dot(normal, lightDir_1)) - lightDir_1;
+  vec4 r_2 = (2 * normal * dot(normal, lightDir_2)) - lightDir_2;
+  vec4 r_3 = (2 * normal * dot(normal, lightDir_3)) - lightDir_3;
+  vec4 r_4 = (2 * normal * dot(normal, lightDir_4)) - lightDir_4;
+  vec4 r_5 = (2 * normal * dot(normal, lightDir_5)) - lightDir_5;
   
-  //float v = max(dot(lookAt, normal), 0.0);
+  //thank you to Ed for helping me figure out the specular components!
+  float alpha = 4;
   
-  vec4 r = (2 * normal * dot(normal, lightDir)) - lightDir;
-  vec4 r2 = (2 * normal * dot(normal, lightDir2)) - lightDir2;
+  //yellow
+  float iR_0 = 0.20 + (2*intensity_0);
+  float iG_0 = 0.20 + (2*intensity_0);
+  float iB_0 = 0.05 + pow(max(dot(normalize(-ppos), r_0), 0.0), alpha);
   
-  //thank you to Ed for helping me figure this out!
-  float iR = 0.05 + (2*intensity) + pow(max(dot(normalize(-ppos), r), 0.0), 4);
-  float iG = 0.25 + (2*intensity);
-  float iB = 0.05;
+  //magenta
+  float iR_1 = 0.20 + (2*intensity_1);
+  float iG_1 = 0.05 + pow(max(dot(normalize(-ppos), r_1), 0.0), alpha);
+  float iB_1 = 0.20 + (2*intensity_1);
   
-  float iR2 = 0.10 + (2*intensity2) + pow(max(dot(normalize(-ppos), r2), 0.0), 4);
-  float iG2 = 0.05;
-  float iB2 = 0.25 + (2*intensity2);
+  //cyan
+  float iR_2 = 0.05 + pow(max(dot(normalize(-ppos), r_2), 0.0), alpha);
+  float iG_2 = 0.20 + (2*intensity_2);
+  float iB_2 = 0.20 + (2*intensity_2);
+  
+  //blue
+  float iR_3 = 0.05 + pow(max(dot(normalize(-ppos), r_3), 0.0), alpha);
+  float iG_3 = 0.05 + pow(max(dot(normalize(-ppos), r_3), 0.0), alpha);
+  float iB_3 = 0.40 + (2*intensity_3);
+  
+  
+  //green
+  float iR_4 = 0.05 + pow(max(dot(normalize(-ppos), r_4), 0.0), alpha);
+  float iG_4 = 0.40 + (2*intensity_4);
+  float iB_4 = 0.00 + pow(max(dot(normalize(-ppos), r_4), 0.0), alpha);
+  
+  //red
+  float iR_5 = 0.40 + (2*intensity_5);
+  float iG_5 = 0.05 + pow(max(dot(normalize(-ppos), r_5), 0.0), alpha);
+  float iB_5 = 0.05 + pow(max(dot(normalize(-ppos), r_5), 0.0), alpha);
   
   color = vec3(
-  (iR + iR2)*0.5/**(1+(displacement - noise_level))*/, 
-  (iG + iG2)*0.5/**(1+(displacement - noise_level))*/, 
-  (iB + iB2)*0.5/**(1+(displacement - noise_level))*/);
+  (iR_0 + iR_1 + iR_2 + iR_3 + iR_4 + iR_5)*0.17, 
+  (iG_0 + iG_1 + iG_2 + iG_3 + iG_4 + iG_5)*0.17, 
+  (iB_0 + iB_1 + iB_2 + iB_3 + iB_4 + iB_5)*0.17);
 	
   gl_Position = projMat * viewMat * modelMat * vec4(newPosition, 1.0f);
 }

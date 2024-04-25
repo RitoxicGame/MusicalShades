@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\sounds">
+      <UniqueIdentifier>{53784a67-cd52-499a-831b-9ffae6478d2b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShaderClass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShaderProgram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AudioHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShaderClass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShaderProgram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Text.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AudioHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\basic.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\basic.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\displacement.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\displacement.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perFrag_lambert.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perFrag_lambert.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perVert_lambert.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perVert_lambert.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\toon_shading.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\toon_shading.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perFrag_phong.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perFrag_phong.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perVert_phong.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\perVert_phong.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="sounds\01 Suibotsushita chinshuujigoku.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\02 Mahoutsukai no yuuutsu.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\03 Koiiro Master Spark.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\04 Shoujokisoukyoku.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\05 Kurayami no huuketsu.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\06 Mannennokigasa ni gochuui wo.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\07 Huujirareta Youkai.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\08 Kyuujigokukaidou wo yuku.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\09 Hana no sakazuki ooeyama.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\10 Onbashira no hakaba.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\11 Kamisabita kosenjou.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\12 Captain Murasa.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\13 Gouka Mantle.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\14 Reichi no taiyoushinkou.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\15 Hukyuu no manjushage.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\16 Seraphic Chicken.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\17 Koyoi ha hyouitsu na Egoist ~ Ego.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\18 Mahoushoujotachi no hyakunensai.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\19 U.N. Owen ha kanojo nanoka_.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\20 Daichi no soko gouyoku no umi.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\21 Gouyoku na kemono no Memento.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\22 Yuukitai subete no Memento.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\23 Tenrijinyoku.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\24 Touhougouyokuibun.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\25 Gouyoku na kemono no Memento (Arr.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\26 Suibotsushita chinshuujigoku (Arr.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\Necromantic.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\Rabi-Ribi Original Soundtrack - 45 No Remorse.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+    <Media Include="sounds\zx_bgm024.wav">
+      <Filter>Resource Files\sounds</Filter>
+    </Media>
+  </ItemGroup>
+</Project>

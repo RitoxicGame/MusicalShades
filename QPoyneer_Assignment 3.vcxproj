@@ -84,8 +84,11 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Users\Admin\Documents\MyLib\MyLib\lib\x32;C:\Users\Admin\Documents\RIT\Semester2\IGME740\670x740 FINAL\libsndfile-1.2.2-win32\lib;C:\fftw-3.3.5-dll32\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);glew32.lib;freeglut.lib;sndfile.lib;winmm.lib;libfftw3-3.dll;libfftw3f-3.dll;libfftw3l-3.dll</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);glew32.lib;freeglut.lib;sndfile.lib;winmm.lib;libfftw3f-3.lib;libfftw3-3.lib;libfftw3l-3.lib</AdditionalDependencies>
     </Link>
+    <BuildLog>
+      <Path>$(IntDir)$(ProjectName).log</Path>
+    </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

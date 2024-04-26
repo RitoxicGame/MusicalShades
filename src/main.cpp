@@ -149,10 +149,10 @@ const float MIN_ORBIT_RAD = 7.0f;
 float orbitrad = MIN_ORBIT_RAD;
 
 //divisors for orbit speed -- higher number = slower orbit
-const float ORBIT_SPD_SLOW = 1200;
-const float ORBIT_SPD_MED = 600;
-const float ORBIT_SPD_FAST = 300;
-const float ORBIT_SPD_ULTRA = 150;
+const float ORBIT_SPD_SLOW = 1.200;
+const float ORBIT_SPD_MED = 0.600;
+const float ORBIT_SPD_FAST = 0.300;
+const float ORBIT_SPD_ULTRA = 0.150;
 
 float orbitSpeedDenom;
 
@@ -261,6 +261,7 @@ void display()
 
 	mat4 mvp = g_cam.projMat * g_cam.viewMat;
 	g_time = (float)glutGet(GLUT_ELAPSED_TIME) / 1000.0f; //moved this up here for ~reasons~
+	cout << std::to_string(g_time) << endl;
 
 	//settin up light sources to orbit the origin
 	//could've probably used gl rotate methods for this, but this was more fun and intuitive for me
@@ -302,12 +303,13 @@ void display()
 
 	if (ah.is_playing) 
 	{
-		//song_ending = ah.extractfft(song_time, deltaT, low_freq, high_freq);
-		if (song_ending)
+		//song will end within approximately one draw call
+		song_ending = ah.extractfft(song_time, deltaT, low_freq, high_freq);
+		if (!song_ending)
 		{
-
+			//if the song isn't about to end, 
+			song_time += deltaT;
 		}
-		song_time += deltaT;
 	}
 
 	// add any stuff you'd like to draw	

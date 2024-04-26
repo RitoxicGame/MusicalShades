@@ -14,7 +14,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
-# *.dll ~actually need these for libsndfile
+*.dll
 
 # Fortran module files
 *.mod
@@ -24,10 +24,10 @@
 *.lai
 *.la
 *.a
-# *.lib ~actually need these for libsndfile
+*.lib
 
 # Executables
-# *.exe ~actually need these for libsndfile
+*.exe
 *.out
 *.app
 

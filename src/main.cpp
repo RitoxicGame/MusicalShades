@@ -192,6 +192,8 @@ vec3 g_lightPosAlt5 = vec3(
 int swap_lights = 0;
 
 AudioHandler ah; //audio handler -- holds song list, plays music, and parses song data
+int song_frame = 0;
+float curr_amp;
 
 float g_time = 0.0f;
 
@@ -296,6 +298,15 @@ void display()
 		g_lightPosAlt5.y = orbitrad * std::sin(thetaAlt5);
 
 	}
+
+	curr_amp = ah.extract(song_frame);
+	if (curr_amp >= 0)
+	{
+		song_frame++;
+		//cout << "Frame #" + std::to_string(song_frame) << endl;
+		//cout << "Avg amp: " + std::to_string(curr_amp) << endl;
+	}
+	else song_frame = 0;
 
 	// add any stuff you'd like to draw	
 
@@ -464,7 +475,6 @@ void menu(int value)
 		break;
 	case 0:
 		g_cam.set(3.0f, 4.0f, 14.0f, 0.0f, 1.0f, -0.5f, g_winWidth, g_winHeight);
-		cout << "fuck me sideways" << endl;
 		break;
 	case 1:
 		g_cam.ChangeScrollSpeed(slowscroll);
@@ -504,6 +514,7 @@ void menu(int value)
 		break;
 	case 13:
 		ah.stop();
+		song_frame = 0;
 		break;
 	case 14:
 		ah.play(0);

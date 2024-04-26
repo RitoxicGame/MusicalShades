@@ -1,13 +1,16 @@
 #pragma comment(lib, "winmm.lib") //https://stackoverflow.com/questions/9961949/playsound-in-c-console-application
 
-#include "sndfile.hh"
+#define _SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING
 
+#include "sndfile.hh"
 #include <iostream>
+#include <stdlib.h>
 #include <list>
 #include <windows.h>
 #include <mmsystem.h>
 #include "AudioHandler.h"
-#include <complex>
+#include <math.h>
+#include <complex.h>
 #include <fftw3.h>
 
 using namespace std;
@@ -19,6 +22,7 @@ AudioHandler::AudioHandler(void)
 {
 	now_playing = 0;
 	is_playing = false;
+	duration = 0;
 	sample_buffer = NULL; //set these to null, since a song is currently not playing
 	out = NULL;
 	in = NULL;
@@ -48,7 +52,7 @@ void AudioHandler::play(int index)
 		parse();
 
 		wstring temp = std::wstring(song_list[now_playing].begin(), song_list[now_playing].end());
-		if (PlaySoundW(temp.c_str(), NULL, SND_FILENAME /* | SND_NODEFAULT*/ | SND_ASYNC | SND_LOOP))
+		if (PlaySoundW(temp.c_str(), NULL, SND_FILENAME /* | SND_NODEFAULT*/ | SND_ASYNC/* | SND_LOOP*/))
 		{
 			cout << "Now Playing: " + song_list[now_playing] << endl;
 			is_playing = true;
@@ -74,10 +78,10 @@ void AudioHandler::parse() //implementation inspired by this tutorial: https://c
 	sample_buffer = new float[snd.frames() * snd.channels()];
 	snd.readf(sample_buffer, snd.frames());
 
+	duration = (float)snd.frames() / (44100.0f * snd.channels());
 
-
-	cout << "Channels: " + std::to_string(snd.channels()) << endl;
-	cout << "Number of Frames: " + std::to_string(snd.frames()) << endl;
+	//cout << "Channels: " + std::to_string(snd.channels()) << endl;
+	//cout << "Number of Frames: " + std::to_string(snd.frames()) << endl;
 }
 
 /// <summary>
@@ -92,20 +96,66 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 {
 	bool song_ending = false;
 	unsigned int batch_size = 0;
+	cout << "current time: " + std::to_string(time) + " / " + std::to_string(duration) << endl;
 	if (sample_buffer) {
-		if (44100 * (time + dt) > snd.frames())
+		if (time + dt < duration)
 		{//only compute the whole batch if there are enough samples remaining to do so
-			batch_size = 44100 * 2 * dt;
-			int padded_length = next_pow_2(batch_size);
-			in = fftwf_alloc_real((size_t) padded_length + 1);
-			out = fftwf_alloc_complex(sizeof(fftwf_complex) * batch_size);
-
-			for (int i = time * 2 * 44100; i < (time + dt) * 2 * 44100; i += 2)
+			batch_size = 44100 * snd.channels() * dt;
+		}
+		else
+		{
+			song_ending = true;
+			batch_size = floor((duration - time) * 44100 * snd.channels());
+		}
+		//cout << "Batch size at time " + std::to_string(time) + ": " + std::to_string(batch_size) << endl;
+		
+		int padded_length = next_pow_2(batch_size);
+		in = fftwf_alloc_real((size_t)padded_length + 1);
+		if (!in) return true;
+		out = fftwf_alloc_complex(sizeof(fftwf_complex) * batch_size);
+		if (!out) return true;
+		plan = fftwf_plan_dft_r2c_1d(batch_size, in, out, FFTW_ESTIMATE);
+		if (!plan) return true;
+		int k = batch_size;
+		for (int i = 0; i < batch_size; i += 1)//copy the batch from sample buffer to the input buffer
+		{
+			if ((int)(i + (time * 44100)) > snd.frames())
 			{
-				
+				cout << "Reached end of frame buffer at time " + std::to_string(time) + "\n" +
+					"Final DeltaT = " + std::to_string((int)(i + (time * 44100)) - snd.frames()) << endl;
+				song_ending = true;
+				break;
+			}
+			in[i] = sample_buffer[(int)(i + (time * 44100))];
+		}
+		for (k = min(batch_size, k); k < padded_length + 1; k++)
+		{
+			in[k] = 0;
+		}
+		if (plan)fftwf_execute(plan);
+		else return song_ending;
+
+		float freq;
+		float mag;
+		for (int i = 0; i < (int)floor(batch_size / 2) + 1; i++)
+		{
+			freq = ((float)i / batch_size)*44100;
+			mag = sqrtf(powf(std::real(out[i][0]), 2) + powf(std::imag(out[i][1]), 2));
+			if (freq <= 130) //anything at or below c3 is considered low frequency
+			{
+				lf += mag;
+			}
+			else 
+			{
+				hf += mag;
 			}
 		}
-		//cout << "Samples between " + std::to_string(time) + "and " + std::to_string(time+dt) + " seconds: " + std::to_string(batch_size) << endl;
+		lf /= (int)floor(batch_size / 2) + 1;
+		hf /= (int)floor(batch_size / 2) + 1;
+
+		fftwf_destroy_plan(plan);
+		fftw_free(in);
+		fftw_free(out);
 	}
 	return song_ending;
 }

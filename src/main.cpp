@@ -198,6 +198,9 @@ float high_freq;	//average high-frequency amplitude
 float song_time = 0;	//time since the song began
 bool song_ending;	//if the song will end within the next few ms
 
+float song_time_period = 0;	//tracks period for extracting fft data
+const float STP = 0.04;
+
 float g_time = 0.0f;
 
 void initialization() 
@@ -211,7 +214,8 @@ void initialization()
 		{
 			"sounds\\Rabi-Ribi Original Soundtrack - 45 No Remorse.wav",
 			"sounds\\zx_bgm024.wav",
-			"sounds\\Necromantic.wav"
+			"sounds\\Necromantic.wav",
+			"sounds\\rrgo.wav"
 		});
 
 	mat4 m = translate(mat4(1.0), vec3(0.0f, 0.0f, 0.0f));
@@ -267,6 +271,10 @@ void display()
 	//could've probably used gl rotate methods for this, but this was more fun and intuitive for me
 	deltaT = g_time - oldT;
 	oldT = g_time;
+
+	//orbitrad += low_freq;
+	orbitrad = MIN_ORBIT_RAD * (1 + (low_freq/* * (10 * (-1 * powf(song_time_period - std::sqrtf(.05), 2) + .05))*/));
+
 	if (orbitSpeedDenom > 0)
 	{
 		theta += ((pi<float>() * deltaT) / orbitSpeedDenom);
@@ -275,42 +283,55 @@ void display()
 		thetaAlt3 += ((pi<float>() * deltaT) / orbitSpeedDenom);
 		thetaAlt4 += ((pi<float>() * deltaT) / orbitSpeedDenom);
 		thetaAlt5 += ((pi<float>() * deltaT) / orbitSpeedDenom);
-
-		if (theta >= (2 * pi<float>())) theta -= (2 * pi<float>());
-		if (thetaAlt >= (2 * pi<float>())) thetaAlt -= (2 * pi<float>());
-
-		g_lightPos.x = orbitrad * std::cos(theta);
-		g_lightPos.z = orbitrad * std::sin(theta);
-		//g_lightPos.x += -1 * std::sin(theta);
-		//g_lightPos.z += std::cos(theta);
-
-		g_lightPosAlt.y = orbitrad * std::sin(thetaAlt);
-		g_lightPosAlt.z = orbitrad * std::cos(thetaAlt);
-
-		g_lightPosAlt2.x = orbitrad * std::cos(thetaAlt2);
-		g_lightPosAlt2.y = orbitrad * std::sin(thetaAlt2);
-
-		g_lightPosAlt3.x = orbitrad * std::cos(thetaAlt3);
-		g_lightPosAlt3.z = orbitrad * std::sin(thetaAlt3);
-
-		g_lightPosAlt4.y = orbitrad * std::sin(thetaAlt4);
-		g_lightPosAlt4.z = orbitrad * std::cos(thetaAlt4);
-
-		g_lightPosAlt5.x = orbitrad * std::cos(thetaAlt5);
-		g_lightPosAlt5.y = orbitrad * std::sin(thetaAlt5);
-
 	}
 
-	if (ah.is_playing) 
+	if (theta >= (2 * pi<float>())) theta -= (2 * pi<float>());
+	if (thetaAlt >= (2 * pi<float>())) thetaAlt -= (2 * pi<float>());
+
+	g_lightPos.x = orbitrad * std::cos(theta);
+	g_lightPos.z = orbitrad * std::sin(theta);
+	//g_lightPos.x += -1 * std::sin(theta);
+	//g_lightPos.z += std::cos(theta);
+
+	g_lightPosAlt.y = orbitrad * std::sin(thetaAlt);
+	g_lightPosAlt.z = orbitrad * std::cos(thetaAlt);
+
+	g_lightPosAlt2.x = orbitrad * std::cos(thetaAlt2);
+	g_lightPosAlt2.y = orbitrad * std::sin(thetaAlt2);
+
+	g_lightPosAlt3.x = orbitrad * std::cos(thetaAlt3);
+	g_lightPosAlt3.z = orbitrad * std::sin(thetaAlt3);
+
+	g_lightPosAlt4.y = orbitrad * std::sin(thetaAlt4);
+	g_lightPosAlt4.z = orbitrad * std::cos(thetaAlt4);
+
+	g_lightPosAlt5.x = orbitrad * std::cos(thetaAlt5);
+	g_lightPosAlt5.y = orbitrad * std::sin(thetaAlt5);
+
+	//orbitrad = std::max(orbitrad - low_freq, MIN_ORBIT_RAD);
+
+	if (ah.is_playing && !song_ending) //if the song is playing and isn't about to end, 
 	{
-		//song will end within approximately one draw call
-		song_ending = ah.extractfft(song_time, deltaT, low_freq, high_freq);
-		if (!song_ending)
+		song_time_period += deltaT;
+		song_time += deltaT;
+		if (song_time_period > STP)
 		{
-			//if the song isn't about to end, 
-			song_time += deltaT;
+			low_freq = 0;
+			high_freq = 0;
+			//song will end within approximately ten draw calls?
+			song_ending = ah.extractfft(song_time, song_time_period, low_freq, high_freq);
+			//cout << "Low freq avg m = " + std::to_string(low_freq) +
+			//	"; High freq avg m = " + std::to_string(high_freq) << endl;
+
+			song_time_period = 0;
 		}
-		else { song_time = 0; song_ending = false; }
+	}
+	else if(song_time > 0)
+	{
+		cout << "Song ended at time: " + std::to_string(song_time) + " / " + std::to_string(ah.duration) << endl;
+		song_time = 0;
+		//song_ending = false;
+		song_time_period = 0;//STP;
 	}
 
 	// add any stuff you'd like to draw	
@@ -378,19 +399,10 @@ void display()
 	str = "e";
 	g_text.draw(10, 60, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
-	//str = "e";
-	//g_text.draw(10, 75, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-	//
-	//str = "f";
-	//g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-	str = "light position: (" + std::to_string(g_lightPos.x) + ", " 
-		+ std::to_string(g_lightPos.y) + ", "
-		+ std::to_string(g_lightPos.z) + ")";
+	str = "FPS: " + std::to_string(1000/deltaT);
 	g_text.draw(10, 75, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 	
-	str = "2nd light position: (" + std::to_string(g_lightPosAlt.x) + ", "
-		+ std::to_string(g_lightPosAlt.y) + ", "
-		+ std::to_string(g_lightPosAlt.z) + ")";
+	str = "Frame Time: " + std::to_string(deltaT);
 	g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
 	str = "Theta value: " + std::to_string(theta);
@@ -519,15 +531,29 @@ void menu(int value)
 	case 13:
 		ah.stop();
 		song_time = 0;
+		song_time_period = 0;
+		orbitrad = MIN_ORBIT_RAD;
 		break;
 	case 14:
+		song_time_period = 0;// STP;
+		song_ending = false;
 		ah.play(0);
 		break;
 	case 15:
+		song_time_period = 0;// STP;
+		song_ending = false;
 		ah.play(1);
 		break;
 	case 16:
+		song_time_period = 0;// STP;
+		song_ending = false;
 		ah.play(2);
+		break;
+	case 17:
+		song_time_period = 0;// STP;
+		song_ending = false;
+		ah.play(3);
+		break;
 		
 		//....
 
@@ -559,6 +585,7 @@ void createMenu()
 	glutAddMenuEntry("Rabi-Ribi Original Soundtrack - 45 No Remorse.wav", 14);
 	glutAddMenuEntry("zx_bgm024.wav", 15);
 	glutAddMenuEntry("Necromantic.wav", 16);
+	glutAddMenuEntry("rrgo.wav", 17);
 
 	//....
 

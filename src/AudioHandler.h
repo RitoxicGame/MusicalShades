@@ -22,6 +22,7 @@ public:
 	vector<string> song_list;	//list of songs
 	int now_playing;			//song index
 	bool is_playing;			//is the current song paused?
+	float duration;				//song duration (s), extrapolated from frames/(samplerate*channels)
 
 private:
 	SndfileHandle snd;

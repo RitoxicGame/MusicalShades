@@ -8,6 +8,8 @@
 #include <vector>
 #include <windows.h>
 #include <mmsystem.h>
+#include <complex>
+#include <fftw3.h>
 
 using namespace std;
 
@@ -24,6 +26,8 @@ public:
 private:
 	SndfileHandle snd;
 	float* sample_buffer;		//pointer to sample buffer for song info
+	fftwf_plan plan;			//fftw plan holder
+	fftwf_complex *in, *out;
 
 public:
 	AudioHandler(void);
@@ -34,8 +38,8 @@ public:
 	void play(int index);
 	void stop();
 
-	float extract(int frame);
-
+	bool extractfft(float time, float dt, float &lf, float &hf);
+	
 private:
 	void parse();
 

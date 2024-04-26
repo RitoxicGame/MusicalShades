@@ -7,6 +7,8 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include "AudioHandler.h"
+#include <complex>
+#include <fftw3.h>
 
 using namespace std;
 
@@ -65,10 +67,6 @@ void AudioHandler::stop()
 /// </summary>
 void AudioHandler::parse() //implementation inspired by this tutorial: https://cindybui.me/pages/blogs/visual_studio_0#libsndfile
 {
-	//SF_INFO info = { 44100, 2, SF_FORMAT_WAV, 1, 0 };
-	//if (sf_format_check(&info)) SNDFILE* file = sf_open(song_list[now_playing].c_str(), SFM_READ, &info);
-	//else cout << "Invalid info!" << endl;
-
 	snd = SndfileHandle(song_list[now_playing]/*, SFM_READ, SF_FORMAT_WAV, 2, 44100*/);
 	sample_buffer = new float[snd.frames() * snd.channels()];
 	snd.readf(sample_buffer, snd.frames());
@@ -77,18 +75,31 @@ void AudioHandler::parse() //implementation inspired by this tutorial: https://c
 	cout << "Number of Frames: " + std::to_string(snd.frames()) << endl;
 }
 
-float AudioHandler::extract(int frame)
+/// <summary>
+/// 
+/// </summary>
+/// <param name="time">time (seconds) since the song began</param>
+/// <param name="dt">delta time (seconds)</param>
+/// <param name="lf"></param>
+/// <param name="hf"></param>
+/// <returns></returns>
+bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 {
-	float amp = 0.0f;
+	bool song_ending = false;
 	unsigned int samples = 0;
 	if (sample_buffer) {
-		for (int i = frame * 2 * 44100; i < snd.frames() * snd.channels() && i < (frame + 1) * 2 * 44100; i++)
+		//if()
+		for (int i = dt * 2 * 44100; i < snd.frames() * snd.channels() && i < (dt + 1) * 2 * 44100; i++)
 		{
 			samples++;
 			//cout << "sample buffer contents: " + std::to_string(sample_buffer[i]) << endl;
-			if (sample_buffer[i] > 0) amp += sample_buffer[i];
+			//if (sample_buffer[i] > 0) ampl += sample_buffer[i];
+
 		}
-		cout << "Samples on frame #" + std::to_string(frame) + ": " + std::to_string(samples) << endl;
+
+		cout << "Samples at dt " + std::to_string(dt) + ": " + std::to_string(samples) << endl;
+
+
 	}
-	return (samples <= 0 ? -1 : amp / samples);
+	return song_ending;
 }

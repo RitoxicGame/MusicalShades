@@ -191,9 +191,12 @@ vec3 g_lightPosAlt5 = vec3(
 
 int swap_lights = 0;
 
-AudioHandler ah; //audio handler -- holds song list, plays music, and parses song data
-int song_frame = 0;
-float curr_amp;
+AudioHandler ah;	//audio handler -- holds song list, plays music, and parses song data
+//int song_frame = 0;
+float low_freq;		//average low-frequency amplitude
+float high_freq;	//average high-frequency amplitude
+float song_time = 0;	//time since the song began
+bool song_ending;	//if the song will end within the next few ms
 
 float g_time = 0.0f;
 
@@ -201,9 +204,6 @@ void initialization()
 {    
     g_cam.set(3.0f, 4.0f, 14.0f, 0.0f, 1.0f, -0.5f, g_winWidth, g_winHeight);
 	g_text.setColor(0.0f, 0.0f, 0.0f);
-
-	deltaT = clock() - oldT;
-	oldT = clock();
 	
 	orbitSpeedDenom = ORBIT_SPD_MED; //default to medium orbit speed
 
@@ -260,11 +260,12 @@ void display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mat4 mvp = g_cam.projMat * g_cam.viewMat;
+	g_time = (float)glutGet(GLUT_ELAPSED_TIME) / 1000.0f; //moved this up here for ~reasons~
 
 	//settin up light sources to orbit the origin
 	//could've probably used gl rotate methods for this, but this was more fun and intuitive for me
-	deltaT = clock() - oldT;
-	oldT = clock();
+	deltaT = g_time - oldT;
+	oldT = g_time;
 	if (orbitSpeedDenom > 0)
 	{
 		theta += ((pi<float>() * deltaT) / orbitSpeedDenom);
@@ -299,14 +300,15 @@ void display()
 
 	}
 
-	curr_amp = ah.extract(song_frame);
-	if (curr_amp >= 0)
+	if (ah.is_playing) 
 	{
-		song_frame++;
-		//cout << "Frame #" + std::to_string(song_frame) << endl;
-		//cout << "Avg amp: " + std::to_string(curr_amp) << endl;
+		//song_ending = ah.extractfft(song_time, deltaT, low_freq, high_freq);
+		if (song_ending)
+		{
+
+		}
+		song_time += deltaT;
 	}
-	else song_frame = 0;
 
 	// add any stuff you'd like to draw	
 
@@ -413,7 +415,6 @@ void display()
 	//	+ std::to_string(g_lightPosAlt.z) + ")";
 	//g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
-	g_time = (float)glutGet(GLUT_ELAPSED_TIME)/1000.0f;
 	//g_mesh.draw(g_cam.viewMat, g_cam.projMat, g_lightPos, g_time);
 
 	g_mesh.draw(g_cam.viewMat, g_cam.projMat, 
@@ -514,7 +515,7 @@ void menu(int value)
 		break;
 	case 13:
 		ah.stop();
-		song_frame = 0;
+		song_time = 0;
 		break;
 	case 14:
 		ah.play(0);

@@ -77,14 +77,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\MyLib\MyLib\include;C:\Users\Admin\Documents\RIT\Semester2\IGME740\670x740 FINAL\libsndfile-1.2.2-win32\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Admin\Documents\MyLib\MyLib\include;C:\Users\Admin\Documents\RIT\Semester2\IGME740\670x740 FINAL\libsndfile-1.2.2-win32\include;C:\fftw-3.3.5-dll32</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Admin\Documents\MyLib\MyLib\lib\x32;C:\Users\Admin\Documents\RIT\Semester2\IGME740\670x740 FINAL\libsndfile-1.2.2-win32\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);glew32.lib;freeglut.lib;sndfile.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\Admin\Documents\MyLib\MyLib\lib\x32;C:\Users\Admin\Documents\RIT\Semester2\IGME740\670x740 FINAL\libsndfile-1.2.2-win32\lib;C:\fftw-3.3.5-dll32\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);glew32.lib;freeglut.lib;sndfile.lib;winmm.lib;libfftw3-3.dll;libfftw3f-3.dll;libfftw3l-3.dll</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

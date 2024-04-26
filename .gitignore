@@ -40,6 +40,7 @@
 *.mp4
 *.png
 *.zip
+*.def
 
 #Stuff from VS gitignore:
 
@@ -441,3 +442,5 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+*.exp
+*.f03

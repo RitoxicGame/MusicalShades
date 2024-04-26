@@ -19,7 +19,10 @@ AudioHandler::AudioHandler(void)
 {
 	now_playing = 0;
 	is_playing = false;
-	sample_buffer = NULL;
+	sample_buffer = NULL; //set these to null, since a song is currently not playing
+	out = NULL;
+	in = NULL;
+	plan = NULL;
 }
 
 AudioHandler::~AudioHandler(void)
@@ -63,7 +66,7 @@ void AudioHandler::stop()
 }
 
 /// <summary>
-/// Parse the audio data via libsndfile to fill the sample buffer
+/// Parse the audio data via libsndfile to fill the sample buffer, then compute fft
 /// </summary>
 void AudioHandler::parse() //implementation inspired by this tutorial: https://cindybui.me/pages/blogs/visual_studio_0#libsndfile
 {
@@ -71,35 +74,55 @@ void AudioHandler::parse() //implementation inspired by this tutorial: https://c
 	sample_buffer = new float[snd.frames() * snd.channels()];
 	snd.readf(sample_buffer, snd.frames());
 
+
+
 	cout << "Channels: " + std::to_string(snd.channels()) << endl;
 	cout << "Number of Frames: " + std::to_string(snd.frames()) << endl;
 }
 
 /// <summary>
-/// 
+/// Largely borrowed from this tutorial: https://cindybui.me/pages/blogs/visual_studio_0#fftwDemocode
 /// </summary>
 /// <param name="time">time (seconds) since the song began</param>
 /// <param name="dt">delta time (seconds)</param>
-/// <param name="lf"></param>
+/// <param name="lf">average magnitude of low-frequency (>=  waves</param>
 /// <param name="hf"></param>
 /// <returns></returns>
 bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 {
 	bool song_ending = false;
-	unsigned int samples = 0;
+	unsigned int batch_size = 0;
 	if (sample_buffer) {
-		//if()
-		for (int i = dt * 2 * 44100; i < snd.frames() * snd.channels() && i < (dt + 1) * 2 * 44100; i++)
-		{
-			samples++;
-			//cout << "sample buffer contents: " + std::to_string(sample_buffer[i]) << endl;
-			//if (sample_buffer[i] > 0) ampl += sample_buffer[i];
+		if (44100 * (time + dt) > snd.frames())
+		{//only compute the whole batch if there are enough samples remaining to do so
+			batch_size = 44100 * 2 * dt;
+			int padded_length = next_pow_2(batch_size);
+			in = fftwf_alloc_real((size_t) padded_length + 1);
+			out = fftwf_alloc_complex(sizeof(fftwf_complex) * batch_size);
 
+			for (int i = time * 2 * 44100; i < (time + dt) * 2 * 44100; i += 2)
+			{
+				
+			}
 		}
-
-		cout << "Samples at dt " + std::to_string(dt) + ": " + std::to_string(samples) << endl;
-
-
+		//cout << "Samples between " + std::to_string(time) + "and " + std::to_string(time+dt) + " seconds: " + std::to_string(batch_size) << endl;
 	}
 	return song_ending;
+}
+
+/// <summary>
+/// Straight-up stole this from https://cindybui.me/pages/blogs/visual_studio_0#fftwDemocode: 
+/// Takes in an integer and computes the next closest power of 2
+/// </summary>
+/// <param name="x">input integer</param>
+/// <returns>next power of 2 closest to x</returns>
+int AudioHandler::next_pow_2(int x) {
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	x++;
+	return x;
 }

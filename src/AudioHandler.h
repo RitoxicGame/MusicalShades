@@ -26,8 +26,9 @@ public:
 private:
 	SndfileHandle snd;
 	float* sample_buffer;		//pointer to sample buffer for song info
-	fftwf_plan plan;			//fftw plan holder
-	fftwf_complex *in, *out;
+	fftwf_plan plan;			//FFTW plan holder
+	float* in;					//input buffer for FFTW
+	fftwf_complex *out;			//output buffer for FFTW
 
 public:
 	AudioHandler(void);
@@ -42,6 +43,8 @@ public:
 	
 private:
 	void parse();
+
+	int next_pow_2(int x);
 
 //	void debug_print();
 };

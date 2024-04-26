@@ -261,7 +261,7 @@ void display()
 
 	mat4 mvp = g_cam.projMat * g_cam.viewMat;
 	g_time = (float)glutGet(GLUT_ELAPSED_TIME) / 1000.0f; //moved this up here for ~reasons~
-	cout << std::to_string(g_time) << endl;
+	//cout << std::to_string(deltaT) << endl;
 
 	//settin up light sources to orbit the origin
 	//could've probably used gl rotate methods for this, but this was more fun and intuitive for me
@@ -310,6 +310,7 @@ void display()
 			//if the song isn't about to end, 
 			song_time += deltaT;
 		}
+		else { song_time = 0; song_ending = false; }
 	}
 
 	// add any stuff you'd like to draw	

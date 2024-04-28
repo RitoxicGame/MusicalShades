@@ -32,6 +32,8 @@
 #include <iostream>
 #include <windows.h>
 #include <mmsystem.h>
+#include <chrono>
+#include <ctime>
 //#define _USES_MATH_DEFINES //pulled from this source: https://stackoverflow.com/questions/1727881/how-to-use-the-pi-constant-in-c
 //#include <math.h>
 using namespace std;
@@ -123,23 +125,27 @@ Mesh g_mesh;
 
 wstring beef;
 
-const float THETA_0 = pi<float>() / 4.0f; //about y
+const float THETA_0 = pi<float>() / 4.0f; //light 0 (yellow), about y
 float theta = THETA_0;
 
-const float THETAALT_0 = 3 * pi<float>() / 4.0f; //about x
+const float THETAALT_0 = pi<float>() / 6.0f; //light 1 (magenta), about x
 float thetaAlt = THETAALT_0;
 
-const float THETAALT2_0 = pi<float>() / 2.0f; //about z
+const float THETAALT2_0 = pi<float>() / 2.0f; //light 2 (cyan), about z
 float thetaAlt2 = THETAALT2_0;
 
-const float THETAALT3_0 = 5 * pi<float>() / 4.0f; //about y (#2)
+const float THETAALT3_0 = 5 * pi<float>() / 4.0f; //light 3 (blue), about y (#2)
 float thetaAlt3 = THETAALT3_0;
 
-const float THETAALT4_0 = 7 * pi<float>() / 4.0f; //about x (#2)
+const float THETAALT4_0 = 7 * pi<float>() / 6.0f; //light 4 (green), about x (#2)
 float thetaAlt4 = THETAALT4_0;
 
-const float THETAALT5_0 = 3 * pi<float>() / 2.0f; //about z (#2)
+const float THETAALT5_0 = 3 * pi<float>() / 2.0f; //light 5 (red), about z (#2)
 float thetaAlt5 = THETAALT5_0;
+
+chrono::time_point oldTime;
+chrono::duration elapsed;
+double dT = 0.0;
 
 float deltaT;
 float oldT = 0;
@@ -195,7 +201,8 @@ AudioHandler ah;	//audio handler -- holds song list, plays music, and parses son
 //int song_frame = 0;
 float low_freq;		//average low-frequency amplitude
 float high_freq;	//average high-frequency amplitude
-float song_time = 0;	//time since the song began
+float song_time = 0;//time since the song began
+double songT = 0;
 bool song_ending;	//if the song will end within the next few ms
 
 float song_time_period = 0;	//tracks period for extracting fft data
@@ -208,12 +215,13 @@ void initialization()
     g_cam.set(3.0f, 4.0f, 14.0f, 0.0f, 1.0f, -0.5f, g_winWidth, g_winHeight);
 	g_text.setColor(0.0f, 0.0f, 0.0f);
 	
-	orbitSpeedDenom = ORBIT_SPD_MED; //default to medium orbit speed
+	orbitSpeedDenom = ORBIT_SPD_SLOW; //default to medium orbit speed
 
 	ah.create(
 		{
 			"sounds\\Rabi-Ribi Original Soundtrack - 45 No Remorse.wav",
-			"sounds\\zx_bgm024.wav",
+			"sounds\\25 Gouyoku na kemono no Memento (Arr.wav",
+			//"sounds\\zx_bgm024.wav", //sample rate is 48kHz: will not work with current implementation
 			"sounds\\Necromantic.wav",
 			"sounds\\rrgo.wav"
 		});
@@ -267,10 +275,17 @@ void display()
 	g_time = (float)glutGet(GLUT_ELAPSED_TIME) / 1000.0f; //moved this up here for ~reasons~
 	//cout << std::to_string(deltaT) << endl;
 
-	//settin up light sources to orbit the origin
-	//could've probably used gl rotate methods for this, but this was more fun and intuitive for me
+	//setting up deltaT vars
 	deltaT = g_time - oldT;
 	oldT = g_time;
+
+	elapsed = chrono::steady_clock::now() - oldTime;
+	oldTime = chrono::steady_clock::now();
+
+	dT = double(elapsed.count()) * (chrono::steady_clock::period::num / chrono::steady_clock::period::den);
+
+	//settin up light sources to orbit the origin
+	//could've probably used gl rotate methods for this, but this was more fun and intuitive for me
 
 	//orbitrad += low_freq;
 	orbitrad = MIN_ORBIT_RAD * (1 + (low_freq/* * (10 * (-1 * powf(song_time_period - std::sqrtf(.05), 2) + .05))*/));
@@ -312,12 +327,17 @@ void display()
 
 	if (ah.is_playing && !song_ending) //if the song is playing and isn't about to end, 
 	{
+		
 		song_time_period += deltaT;
 		song_time += deltaT;
+		songT += dT;
 		if (song_time_period > STP)
 		{
 			low_freq = 0;
 			high_freq = 0;
+
+			cout << "Steady Clock has time at " + std::to_string(songT) + ", whereas ";
+
 			//song will end within approximately ten draw calls?
 			song_ending = ah.extractfft(song_time, song_time_period, low_freq, high_freq);
 			//cout << "Low freq avg m = " + std::to_string(low_freq) +
@@ -330,6 +350,7 @@ void display()
 	{
 		cout << "Song ended at time: " + std::to_string(song_time) + " / " + std::to_string(ah.duration) << endl;
 		song_time = 0;
+		songT = 0;
 		//song_ending = false;
 		song_time_period = 0;//STP;
 	}
@@ -374,7 +395,7 @@ void display()
 	(swap_lights == 4 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
 
 	glPopMatrix();
-	glColor3f(1, 0, 0); //set up light 3 (red, orbit z)
+	glColor3f(1, 0, 0); //set up light 5 (red, orbit z)
 	glTranslatef(g_lightPosAlt5.x, g_lightPosAlt5.y, g_lightPosAlt5.z);
 	(swap_lights == 5 ? glutSolidSphere : glutWireSphere)(0.2, 8, 8);
 
@@ -393,7 +414,7 @@ void display()
 		str = "Cam mode: FP";
 		g_text.draw(10, 30, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 	}
-	str = "b";
+	str = "Currently selected light: " + std::to_string(swap_lights);
 	g_text.draw(10, 45, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
 	str = "e";
@@ -435,7 +456,7 @@ void display()
 	g_mesh.draw(g_cam.viewMat, g_cam.projMat, 
 		{ g_lightPos, g_lightPosAlt, g_lightPosAlt2, g_lightPosAlt3, g_lightPosAlt4, g_lightPosAlt5 }, /*list of light position vectors*/
 		vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), 
-		g_time);
+		g_time, high_freq);
 	//g_mesh2.draw(g_cam.viewMat, g_cam.projMat, g_lightPos, g_lightPosAlt, vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), g_time);
 
     glutSwapBuffers();
@@ -531,25 +552,36 @@ void menu(int value)
 	case 13:
 		ah.stop();
 		song_time = 0;
+		songT = 0;
 		song_time_period = 0;
 		orbitrad = MIN_ORBIT_RAD;
+		high_freq = 0;
+		low_freq = 0;
 		break;
 	case 14:
+		song_time = 0;
+		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
 		ah.play(0);
 		break;
 	case 15:
+		song_time = 0;
+		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
 		ah.play(1);
 		break;
 	case 16:
+		song_time = 0;
+		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
 		ah.play(2);
 		break;
 	case 17:
+		song_time = 0;
+		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
 		ah.play(3);
@@ -617,7 +649,7 @@ void keyboard(unsigned char key, int x, int y)
 			exit(0);
 			break;
 		case 9:
-			swap_lights = (swap_lights++)%6;
+			swap_lights = (swap_lights + 1)%6;
 			break;
         case'c': // switch cam control mode
             g_cam.switchCamMode();
@@ -637,22 +669,22 @@ void keyboard(unsigned char key, int x, int y)
 		case'r':
 			switch(swap_lights) 
 			{
-			case 1:
+			case 0:
 				g_lightPos.y += 0.5f;
 				break;
-			case 2:
+			case 1:
 				g_lightPosAlt.y += 0.5f;
 				break;
-			case 3:
+			case 2:
 				g_lightPosAlt2.y += 0.5f;
 				break;
-			case 4:
+			case 3:
 				g_lightPosAlt3.y += 0.5f;
 				break;
-			case 5:
+			case 4:
 				g_lightPosAlt4.y += 0.5f;
 				break;
-			case 6:
+			case 5:
 				g_lightPosAlt5.y += 0.5f;
 				break;
 			default:
@@ -662,22 +694,22 @@ void keyboard(unsigned char key, int x, int y)
 		case'f':
 			switch (swap_lights)
 			{
-			case 1:
+			case 0:
 				g_lightPos.y -= 0.5f;
 				break;
-			case 2:
+			case 1:
 				g_lightPosAlt.y -= 0.5f;
 				break;
-			case 3:
+			case 2:
 				g_lightPosAlt2.y -= 0.5f;
 				break;
-			case 4:
+			case 3:
 				g_lightPosAlt3.y -= 0.5f;
 				break;
-			case 5:
+			case 4:
 				g_lightPosAlt4.y -= 0.5f;
 				break;
-			case 6:
+			case 5:
 				g_lightPosAlt5.y -= 0.5f;
 				break;
 			default:
@@ -687,22 +719,22 @@ void keyboard(unsigned char key, int x, int y)
 		case'd':
 			switch (swap_lights)
 			{
-			case 1:
+			case 0:
 				g_lightPos.x += 0.5f;
 				break;
-			case 2:
+			case 1:
 				g_lightPosAlt.x += 0.5f;
 				break;
-			case 3:
+			case 2:
 				g_lightPosAlt2.x += 0.5f;
 				break;
-			case 4:
+			case 3:
 				g_lightPosAlt3.x += 0.5f;
 				break;
-			case 5:
+			case 4:
 				g_lightPosAlt4.x += 0.5f;
 				break;
-			case 6:
+			case 5:
 				g_lightPosAlt5.x += 0.5f;
 				break;
 			default:
@@ -712,22 +744,22 @@ void keyboard(unsigned char key, int x, int y)
 		case'a':
 			switch (swap_lights)
 			{
-			case 1:
+			case 0:
 				g_lightPos.x -= 0.5f;
 				break;
-			case 2:
+			case 1:
 				g_lightPosAlt.x -= 0.5f;
 				break;
-			case 3:
+			case 2:
 				g_lightPosAlt2.x -= 0.5f;
 				break;
-			case 4:
+			case 3:
 				g_lightPosAlt3.x -= 0.5f;
 				break;
-			case 5:
+			case 4:
 				g_lightPosAlt4.x -= 0.5f;
 				break;
-			case 6:
+			case 5:
 				g_lightPosAlt5.x -= 0.5f;
 				break;
 			default:
@@ -737,22 +769,22 @@ void keyboard(unsigned char key, int x, int y)
 		case's':
 			switch (swap_lights)
 			{
-			case 1:
+			case 0:
 				g_lightPos.z += 0.5f;
 				break;
-			case 2:
+			case 1:
 				g_lightPosAlt.z += 0.5f;
 				break;
-			case 3:
+			case 2:
 				g_lightPosAlt2.z += 0.5f;
 				break;
-			case 4:
+			case 3:
 				g_lightPosAlt3.z += 0.5f;
 				break;
-			case 5:
+			case 4:
 				g_lightPosAlt4.z += 0.5f;
 				break;
-			case 6:
+			case 5:
 				g_lightPosAlt5.z += 0.5f;
 				break;
 			default:
@@ -762,30 +794,29 @@ void keyboard(unsigned char key, int x, int y)
 		case'w':
 			switch (swap_lights)
 			{
-			case 1:
+			case 0:
 				g_lightPos.z -= 0.5f;
 				break;
-			case 2:
+			case 1:
 				g_lightPosAlt.z -= 0.5f;
 				break;
-			case 3:
+			case 2:
 				g_lightPosAlt2.z -= 0.5f;
 				break;
-			case 4:
+			case 3:
 				g_lightPosAlt3.z -= 0.5f;
 				break;
-			case 5:
+			case 4:
 				g_lightPosAlt4.z -= 0.5f;
 				break;
-			case 6:
+			case 5:
 				g_lightPosAlt5.z -= 0.5f;
 				break;
 			default:
 				break;
 			}
 			break;
-		case'q':
-
+		case'q': //reset light positions and angles
 			thetaAlt5 = THETAALT5_0;
 			thetaAlt4 = THETAALT4_0;
 			thetaAlt3 = THETAALT3_0;

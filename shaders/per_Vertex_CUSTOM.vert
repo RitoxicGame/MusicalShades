@@ -11,6 +11,8 @@ uniform vec3 lightPos_4;
 uniform vec3 lightPos_5;
 uniform float time;
 uniform float noise_level;
+//uniform float low_freq;
+uniform float high_freq;
 
 layout(location = 0) in vec3 vertex_position;
 layout(location = 1) in vec3 vertex_normal;
@@ -128,10 +130,11 @@ void main()
   
   // Value range of perlin noise is[-sqr(N/4), sqr(N/4)], 
   // where N is the dimension. For N = 3, range is [-0.866, 0.866]
-  float noise = (cnoise(vertex_normal*2.5 + vec3(time)*1.5) + 0.866) / (2* 0.866); 
+  float noise = (cnoise(vertex_normal*2.5 + vec3(time)*1.5) + 0.866) / (8* 0.866); 
+  //^^^divisor sets range to [0.00, 0.25]
   
   //altered by QP
-  float displacement = noise * noise_level;
+  float displacement = noise * (pow(noise_level + high_freq, 2));
   vec3 newPosition = vertex_position + vertex_normal * displacement;
   
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -175,38 +178,38 @@ void main()
   vec4 r_5 = (2 * normal * dot(normal, lightDir_5)) - lightDir_5;
   
   //thank you to Ed for helping me figure out the specular components!
-  float alpha = 4;
+  float alpha = 20;
   
   //yellow
-  float iR_0 = 0.20 + (2*intensity_0);
-  float iG_0 = 0.20 + (2*intensity_0);
-  float iB_0 = 0.05 + pow(max(dot(normalize(-ppos), r_0), 0.0), alpha);
+  float iR_0 = 0.20 + (2*intensity_0) + pow(max(dot(normalize(-ppos), r_0), 0.0), alpha);
+  float iG_0 = 0.20 + (2*intensity_0) + pow(max(dot(normalize(-ppos), r_0), 0.0), alpha);
+  float iB_0 = 0.05;
   
   //magenta
-  float iR_1 = 0.20 + (2*intensity_1);
-  float iG_1 = 0.05 + pow(max(dot(normalize(-ppos), r_1), 0.0), alpha);
-  float iB_1 = 0.20 + (2*intensity_1);
+  float iR_1 = 0.20 + (2*intensity_1) + pow(max(dot(normalize(-ppos), r_1), 0.0), alpha);
+  float iG_1 = 0.05;
+  float iB_1 = 0.20 + (2*intensity_1) + pow(max(dot(normalize(-ppos), r_1), 0.0), alpha);
   
   //cyan
-  float iR_2 = 0.05 + pow(max(dot(normalize(-ppos), r_2), 0.0), alpha);
-  float iG_2 = 0.20 + (2*intensity_2);
-  float iB_2 = 0.20 + (2*intensity_2);
+  float iR_2 = 0.05;
+  float iG_2 = 0.20 + (2*intensity_2) + pow(max(dot(normalize(-ppos), r_2), 0.0), alpha);
+  float iB_2 = 0.20 + (2*intensity_2) + pow(max(dot(normalize(-ppos), r_2), 0.0), alpha);
   
   //blue
-  float iR_3 = 0.05 + pow(max(dot(normalize(-ppos), r_3), 0.0), alpha);
-  float iG_3 = 0.05 + pow(max(dot(normalize(-ppos), r_3), 0.0), alpha);
-  float iB_3 = 0.40 + (2*intensity_3);
+  float iR_3 = 0.05;
+  float iG_3 = 0.05;
+  float iB_3 = 0.40 + (2*intensity_3) + pow(max(dot(normalize(-ppos), r_3), 0.0), alpha);
   
   
   //green
-  float iR_4 = 0.05 + pow(max(dot(normalize(-ppos), r_4), 0.0), alpha);
-  float iG_4 = 0.40 + (2*intensity_4);
-  float iB_4 = 0.00 + pow(max(dot(normalize(-ppos), r_4), 0.0), alpha);
+  float iR_4 = 0.05;
+  float iG_4 = 0.20 + (2*intensity_4) + pow(max(dot(normalize(-ppos), r_4), 0.0), alpha);
+  float iB_4 = 0.05;
   
   //red
-  float iR_5 = 0.40 + (2*intensity_5);
-  float iG_5 = 0.05 + pow(max(dot(normalize(-ppos), r_5), 0.0), alpha);
-  float iB_5 = 0.05 + pow(max(dot(normalize(-ppos), r_5), 0.0), alpha);
+  float iR_5 = 0.40 + (2*intensity_5) + pow(max(dot(normalize(-ppos), r_5), 0.0), alpha);
+  float iG_5 = 0.05;
+  float iB_5 = 0.05;
   
   color = vec3(
   (iR_0 + iR_1 + iR_2 + iR_3 + iR_4 + iR_5)*0.17, 

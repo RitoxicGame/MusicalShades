@@ -233,7 +233,7 @@ void Mesh::create(const char* filename, const char* v_shader_file, const char* f
 //    glPopMatrix();
 //}
 
-void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, float time) {
+void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, float time,/* float lf, */float hf) {
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -272,6 +272,8 @@ void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, fl
 	shaderProg.setFloat("offset", normal_offset);
 	//shaderProg.setInt("color_noise_level", color_noiselvl);
 	shaderProg.setFloat("noise_level", mesh_noiselvl);
+	//shaderProg.setFloat("low_freq", lf);
+	shaderProg.setFloat("high_freq", hf);
 
 	//cout << glm::to_string(modelMat) << endl;
 	//cout << glm::to_string(viewMat) << endl;

@@ -61,7 +61,7 @@ public:
     void create (const char* filename, const  char* v_shader_file, const char* f_shader_file);
 
 	//void draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time);
-	void draw(mat4 viewMat, mat4 projMat, list<vec3> lightpos, vec3 lookAt, float time);
+	void draw(mat4 viewMat, mat4 projMat, list<vec3> lightpos, vec3 lookAt, float time,/* float lf, */float hf);
 
 	//void changeColorNoiseLevel(int noiselvl);
 	void changeMeshNoiseLevel(int noiselvl);

@@ -40,7 +40,7 @@ public:
 	void play(int index);
 	void stop();
 
-	bool extractfft(float time, float dt, float &lf, float &hf);
+	bool extractfft(float time, float dt, float& lf, float& hf);
 	
 private:
 	void parse();

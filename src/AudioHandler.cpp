@@ -74,6 +74,7 @@ void AudioHandler::stop()
 /// </summary>
 void AudioHandler::parse() //implementation inspired by this tutorial: https://cindybui.me/pages/blogs/visual_studio_0#libsndfile
 {
+	delete sample_buffer;
 	snd = SndfileHandle(song_list[now_playing]/*, SFM_READ, SF_FORMAT_WAV, 2, 44100*/);
 	sample_buffer = new float[snd.frames() * snd.channels()];
 	snd.readf(sample_buffer, snd.frames());
@@ -94,9 +95,10 @@ void AudioHandler::parse() //implementation inspired by this tutorial: https://c
 /// <returns></returns>
 bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 {
+	dt = min(dt, 1.0f);
 	bool song_ending = false;
 	unsigned int batch_size = 0;
-	cout << "current time: " + std::to_string(time) + " / " + std::to_string(duration) << endl;
+	cout << "song _time thinks it is: " + std::to_string(time) + " / " + std::to_string(duration) << endl;
 	if (sample_buffer) {
 		if (time + dt < duration)
 		{//only compute the whole batch if there are enough samples remaining to do so

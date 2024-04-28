@@ -75,14 +75,16 @@ void AudioHandler::stop()
 void AudioHandler::parse() //implementation inspired by this tutorial: https://cindybui.me/pages/blogs/visual_studio_0#libsndfile
 {
 	delete sample_buffer;
-	snd = SndfileHandle(song_list[now_playing]/*, SFM_READ, SF_FORMAT_WAV, 2, 44100*/);
+	snd = SndfileHandle(song_list[now_playing]);
 	sample_buffer = new float[snd.frames() * snd.channels()];
 	snd.readf(sample_buffer, snd.frames());
 
-	duration = (float)snd.frames() / (44100.0f * snd.channels());
+	duration = (float)snd.frames() / snd.samplerate();
 
-	//cout << "Channels: " + std::to_string(snd.channels()) << endl;
-	//cout << "Number of Frames: " + std::to_string(snd.frames()) << endl;
+	cout << "Channels: " + std::to_string(snd.channels()) << endl;
+	cout << "Number of Frames: " + std::to_string(snd.frames()) << endl;
+	cout << "Total duration = " + std::to_string((int)(snd.frames() / (snd.samplerate() * 60)))
+		+ ":" + std::to_string((int)((snd.frames() / snd.samplerate()) % 60)) << endl;
 }
 
 /// <summary>
@@ -98,19 +100,18 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 	dt = min(dt, 1.0f);
 	bool song_ending = false;
 	unsigned int batch_size = 0;
-	cout << "song _time thinks it is: " + std::to_string(time) + " / " + std::to_string(duration) << endl;
+	//cout << "song_time thinks it is: " + std::to_string(time) + " / " + std::to_string(duration) << endl;
 	if (sample_buffer) {
 		if (time + dt < duration)
 		{//only compute the whole batch if there are enough samples remaining to do so
-			batch_size = 44100 * snd.channels() * dt;
+			batch_size = snd.samplerate() * dt;
 		}
 		else
 		{
 			song_ending = true;
-			batch_size = floor((duration - time) * 44100 * snd.channels());
+			batch_size = floor((duration - time) * snd.samplerate() * snd.channels());
 		}
-		//cout << "Batch size at time " + std::to_string(time) + ": " + std::to_string(batch_size) << endl;
-		
+		//cout << "planning start" << endl;
 		int padded_length = next_pow_2(batch_size);
 		in = fftwf_alloc_real((size_t)padded_length + 1);
 		if (!in) return true;
@@ -118,42 +119,50 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 		if (!out) return true;
 		plan = fftwf_plan_dft_r2c_1d(batch_size, in, out, FFTW_ESTIMATE);
 		if (!plan) return true;
+		//cout << "planning end" << endl;
 		int k = batch_size;
 		for (int i = 0; i < batch_size; i += 1)//copy the batch from sample buffer to the input buffer
 		{
-			if ((int)(i + (time * 44100)) > snd.frames())
+			if ((int)(i + (time * snd.samplerate())) > snd.frames())
 			{
-				cout << "Reached end of frame buffer at time " + std::to_string(time) + "\n" +
-					"Final DeltaT = " + std::to_string((int)(i + (time * 44100)) - snd.frames()) << endl;
+				//cout << "Reached end of frame buffer at time " + std::to_string(time) + "\n" +
+				//	"Final DeltaT = " + std::to_string((int)(i + (time * snd.samplerate())) - snd.frames()) << endl;
 				song_ending = true;
 				break;
 			}
-			in[i] = sample_buffer[(int)(i + (time * 44100))];
+			in[i] = sample_buffer[(int)(i + (time * snd.samplerate()))];
 		}
+		//cout << "\nChecking samples " + std::to_string((time * snd.samplerate())) +
+		//	" through " + std::to_string((time * snd.samplerate()) + batch_size - 1) + 
+		//	" at time " + std::to_string(time) << endl;
 		for (k = min(batch_size, k); k < padded_length + 1; k++)
 		{
 			in[k] = 0;
 		}
-		if (plan)fftwf_execute(plan);
+		if(plan) fftwf_execute(plan);
 		else return song_ending;
 
 		float freq;
 		float mag;
-		for (int i = 0; i < (int)floor(batch_size / 2) + 1; i++)
+		for (int i = 0; i < floor(batch_size / 2) + 1; i++)
 		{
-			freq = ((float)i / batch_size)*44100;
+			freq = ((float)i / (floor(batch_size / 2) + 1))*snd.samplerate();
 			mag = sqrtf(powf(std::real(out[i][0]), 2) + powf(std::imag(out[i][1]), 2));
-			if (freq <= 130) //anything at or below c3 is considered low frequency
+			//cout << "freq/mag " + std::to_string(i) + ": " + std::to_string(freq) + "/" + std::to_string(mag) << endl;
+			//ignoring frequencies outside piano range
+			if (freq >= 27.5f && freq <= 130.0f) //anything at or below c3 is considered low frequency
 			{
-				lf += mag;
+				lf += (int)mag;
 			}
-			else 
+			else if(freq <= 4186.01)
 			{
-				hf += mag;
+				hf += (int)mag;
 			}
 		}
-		lf /= (int)floor(batch_size / 2) + 1;
-		hf /= (int)floor(batch_size / 2) + 1;
+		//cout << "Low freq = " + std::to_string(lf) +
+		//	";\nHigh freq total m = " + std::to_string(hf) << endl;
+		lf /= floor(batch_size / 2) + 1;
+		hf /= floor(batch_size / 2) + 1;
 
 		fftwf_destroy_plan(plan);
 		fftw_free(in);

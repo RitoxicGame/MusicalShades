@@ -123,7 +123,11 @@ const char meshFile[128] =
 Mesh g_mesh;
 //Mesh g_mesh2;
 
-wstring beef;
+chrono::steady_clock::time_point oldTime;
+chrono::duration<double> elapsed;
+chrono::steady_clock::time_point origin_time;
+chrono::duration<double> total_time;
+double dT = 0.0;
 
 const float THETA_0 = pi<float>() / 4.0f; //light 0 (yellow), about y
 float theta = THETA_0;
@@ -143,12 +147,8 @@ float thetaAlt4 = THETAALT4_0;
 const float THETAALT5_0 = 3 * pi<float>() / 2.0f; //light 5 (red), about z (#2)
 float thetaAlt5 = THETAALT5_0;
 
-chrono::time_point oldTime;
-chrono::duration elapsed;
-double dT = 0.0;
-
-float deltaT;
-float oldT = 0;
+//float deltaT;
+//float oldT = 0;
 
 //base orbit radius
 const float MIN_ORBIT_RAD = 7.0f;
@@ -201,14 +201,14 @@ AudioHandler ah;	//audio handler -- holds song list, plays music, and parses son
 //int song_frame = 0;
 float low_freq;		//average low-frequency amplitude
 float high_freq;	//average high-frequency amplitude
-float song_time = 0;//time since the song began
+//float song_time = 0;//time since the song began
 double songT = 0;
 bool song_ending;	//if the song will end within the next few ms
 
 float song_time_period = 0;	//tracks period for extracting fft data
-const float STP = 0.04;
+const float STP = 0.04f; //how often (in seconds) to extract an FFT batch
 
-float g_time = 0.0f;
+//float g_time = 0.0f;
 
 void initialization() 
 {    
@@ -217,13 +217,16 @@ void initialization()
 	
 	orbitSpeedDenom = ORBIT_SPD_SLOW; //default to medium orbit speed
 
+	origin_time = chrono::steady_clock::now();
+	oldTime = chrono::steady_clock::now();
+
 	ah.create(
 		{
 			"sounds\\Rabi-Ribi Original Soundtrack - 45 No Remorse.wav",
 			"sounds\\25 Gouyoku na kemono no Memento (Arr.wav",
-			//"sounds\\zx_bgm024.wav", //sample rate is 48kHz: will not work with current implementation
 			"sounds\\Necromantic.wav",
-			"sounds\\rrgo.wav"
+			"sounds\\rrgo.wav",
+			"sounds\\zx_bgm024.wav"
 		});
 
 	mat4 m = translate(mat4(1.0), vec3(0.0f, 0.0f, 0.0f));
@@ -272,17 +275,19 @@ void display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mat4 mvp = g_cam.projMat * g_cam.viewMat;
-	g_time = (float)glutGet(GLUT_ELAPSED_TIME) / 1000.0f; //moved this up here for ~reasons~
+	//g_time = (float)glutGet(GLUT_ELAPSED_TIME) / 1000.0f; //moved this up here for ~reasons~
 	//cout << std::to_string(deltaT) << endl;
 
 	//setting up deltaT vars
-	deltaT = g_time - oldT;
-	oldT = g_time;
+	//deltaT = g_time - oldT;
+	//oldT = g_time;
 
-	elapsed = chrono::steady_clock::now() - oldTime;
+	total_time = chrono::duration_cast<chrono::duration<double>>(chrono::steady_clock::now() - origin_time);
+	elapsed = chrono::duration_cast<chrono::duration<double>>(chrono::steady_clock::now() - oldTime);
 	oldTime = chrono::steady_clock::now();
 
-	dT = double(elapsed.count()) * (chrono::steady_clock::period::num / chrono::steady_clock::period::den);
+	dT = elapsed.count();
+	//cout << std::to_string(pi<float>() * dT) + " clock dT" << endl;
 
 	//settin up light sources to orbit the origin
 	//could've probably used gl rotate methods for this, but this was more fun and intuitive for me
@@ -292,16 +297,20 @@ void display()
 
 	if (orbitSpeedDenom > 0)
 	{
-		theta += ((pi<float>() * deltaT) / orbitSpeedDenom);
-		thetaAlt += ((pi<float>() * deltaT) / orbitSpeedDenom);
-		thetaAlt2 += ((pi<float>() * deltaT) / orbitSpeedDenom);
-		thetaAlt3 += ((pi<float>() * deltaT) / orbitSpeedDenom);
-		thetaAlt4 += ((pi<float>() * deltaT) / orbitSpeedDenom);
-		thetaAlt5 += ((pi<float>() * deltaT) / orbitSpeedDenom);
+		theta += ((pi<float>() * dT) / orbitSpeedDenom);
+		thetaAlt += ((pi<float>() * dT) / orbitSpeedDenom);
+		thetaAlt2 += ((pi<float>() * dT) / orbitSpeedDenom);
+		thetaAlt3 += ((pi<float>() * dT) / orbitSpeedDenom);
+		thetaAlt4 += ((pi<float>() * dT) / orbitSpeedDenom);
+		thetaAlt5 += ((pi<float>() * dT) / orbitSpeedDenom);
 	}
 
 	if (theta >= (2 * pi<float>())) theta -= (2 * pi<float>());
 	if (thetaAlt >= (2 * pi<float>())) thetaAlt -= (2 * pi<float>());
+	if (thetaAlt2 >= (2 * pi<float>())) thetaAlt2 -= (2 * pi<float>());
+	if (thetaAlt3 >= (2 * pi<float>())) thetaAlt3 -= (2 * pi<float>());
+	if (thetaAlt4 >= (2 * pi<float>())) thetaAlt4 -= (2 * pi<float>());
+	if (thetaAlt5 >= (2 * pi<float>())) thetaAlt5 -= (2 * pi<float>());
 
 	g_lightPos.x = orbitrad * std::cos(theta);
 	g_lightPos.z = orbitrad * std::sin(theta);
@@ -328,29 +337,32 @@ void display()
 	if (ah.is_playing && !song_ending) //if the song is playing and isn't about to end, 
 	{
 		
-		song_time_period += deltaT;
-		song_time += deltaT;
-		songT += dT;
+		song_time_period += dT;
+		//song_time += deltaT;
 		if (song_time_period > STP)
 		{
 			low_freq = 0;
 			high_freq = 0;
 
-			cout << "Steady Clock has time at " + std::to_string(songT) + ", whereas ";
+			//cout << "Steady Clock has time at " + std::to_string(songT) + ", whereas ";
 
 			//song will end within approximately ten draw calls?
-			song_ending = ah.extractfft(song_time, song_time_period, low_freq, high_freq);
+			song_ending = ah.extractfft((float)songT, song_time_period, low_freq, high_freq);
+
 			//cout << "Low freq avg m = " + std::to_string(low_freq) +
 			//	"; High freq avg m = " + std::to_string(high_freq) << endl;
 
+			songT += song_time_period;
 			song_time_period = 0;
 		}
 	}
-	else if(song_time > 0)
+	else if(songT > 0)
 	{
-		cout << "Song ended at time: " + std::to_string(song_time) + " / " + std::to_string(ah.duration) << endl;
-		song_time = 0;
+		cout << "Song ended at time: " + std::to_string(songT) + " / " + std::to_string(ah.duration) << endl;
+		//song_time = 0;
 		songT = 0;
+		high_freq = 0;
+		low_freq = 0;
 		//song_ending = false;
 		song_time_period = 0;//STP;
 	}
@@ -420,11 +432,27 @@ void display()
 	str = "e";
 	g_text.draw(10, 60, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
-	str = "FPS: " + std::to_string(1000/deltaT);
+	str = "Current Time (sec): " + (ah.is_playing && !song_ending
+		?
+		//std::to_string(((int)songT) / 60) + ":" + std::to_string((int)songT % 60)
+		std::to_string(songT)
+		: 
+		"-----");
 	g_text.draw(10, 75, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-	
-	str = "Frame Time: " + std::to_string(deltaT);
+
+	str = "Song Duration: " + (ah.is_playing && !song_ending
+		?
+		//std::to_string((int)ah.duration / 60) + ":" + std::to_string((int)ah.duration % 60)
+		std::to_string(ah.duration)
+		:
+		"-----");
 	g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+
+	//str = "FPS: " + std::to_string(1000/dT);
+	//g_text.draw(10, 75, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	//
+	//str = "Frame Time: " + std::to_string(dT);
+	//g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
 	str = "Theta value: " + std::to_string(theta);
 	g_text.draw(10, 105, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
@@ -432,7 +460,7 @@ void display()
 	str = "ThetaAlt value: " + std::to_string(thetaAlt);
 	g_text.draw(10, 120, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
-	str = "Current BGM: " + (ah.is_playing ? ah.song_list[ah.now_playing] : "N/A");
+	str = "Current BGM: " + (ah.is_playing && !song_ending ? ah.song_list[ah.now_playing] : "N/A");
 	g_text.draw(10, 135, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
 
 
@@ -456,7 +484,7 @@ void display()
 	g_mesh.draw(g_cam.viewMat, g_cam.projMat, 
 		{ g_lightPos, g_lightPosAlt, g_lightPosAlt2, g_lightPosAlt3, g_lightPosAlt4, g_lightPosAlt5 }, /*list of light position vectors*/
 		vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), 
-		g_time, high_freq);
+		(float)total_time.count(), high_freq);
 	//g_mesh2.draw(g_cam.viewMat, g_cam.projMat, g_lightPos, g_lightPosAlt, vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), g_time);
 
     glutSwapBuffers();
@@ -551,7 +579,7 @@ void menu(int value)
 		break;
 	case 13:
 		ah.stop();
-		song_time = 0;
+		//song_time = 0;
 		songT = 0;
 		song_time_period = 0;
 		orbitrad = MIN_ORBIT_RAD;
@@ -559,28 +587,28 @@ void menu(int value)
 		low_freq = 0;
 		break;
 	case 14:
-		song_time = 0;
+		//song_time = 0;
 		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
 		ah.play(0);
 		break;
 	case 15:
-		song_time = 0;
+		//song_time = 0;
 		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
 		ah.play(1);
 		break;
 	case 16:
-		song_time = 0;
+		//song_time = 0;
 		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
 		ah.play(2);
 		break;
 	case 17:
-		song_time = 0;
+		//song_time = 0;
 		songT = 0;
 		song_time_period = 0;// STP;
 		song_ending = false;
@@ -615,7 +643,7 @@ void createMenu()
 
 	int songSelectMenu = glutCreateMenu(menu);
 	glutAddMenuEntry("Rabi-Ribi Original Soundtrack - 45 No Remorse.wav", 14);
-	glutAddMenuEntry("zx_bgm024.wav", 15);
+	glutAddMenuEntry("25 Gouyoku na kemono no Memento (Arrange Ver).wav", 15);
 	glutAddMenuEntry("Necromantic.wav", 16);
 	glutAddMenuEntry("rrgo.wav", 17);
 

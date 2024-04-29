@@ -104,7 +104,7 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 	if (sample_buffer) {
 		if (time + dt < duration)
 		{//only compute the whole batch if there are enough samples remaining to do so
-			batch_size = snd.samplerate() * dt;
+			batch_size = snd.samplerate() * dt * snd.channels();
 		}
 		else
 		{
@@ -130,9 +130,9 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 				song_ending = true;
 				break;
 			}
-			in[i] = sample_buffer[(int)(i + (time * snd.samplerate()))];
+			in[i] = sample_buffer[(int)(i + (time * snd.samplerate() * snd.channels()))];
 		}
-		//cout << "\nChecking samples " + std::to_string((time * snd.samplerate())) +
+		//cout << "\nChecking samples " + std::to_string((time * snd.samplerate() * snd.channels())) +
 		//	" through " + std::to_string((time * snd.samplerate()) + batch_size - 1) + 
 		//	" at time " + std::to_string(time) << endl;
 		for (k = min(batch_size, k); k < padded_length + 1; k++)
@@ -152,15 +152,15 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 			//ignoring frequencies outside piano range
 			if (freq >= 27.5f && freq <= 130.0f) //anything at or below c3 is considered low frequency
 			{
-				lf += (int)mag;
-			}
+				lf += (int)mag; //cast as ints to filter out any noise
+			}					 //(most samples get non-zero magnitudes even if they sound silent)
 			else if(freq <= 4186.01)
 			{
 				hf += (int)mag;
 			}
 		}
 		//cout << "Low freq = " + std::to_string(lf) +
-		//	";\nHigh freq total m = " + std::to_string(hf) << endl;
+		//	"; High freq = " + std::to_string(lf) << endl;
 		lf /= floor(batch_size / 2) + 1;
 		hf /= floor(batch_size / 2) + 1;
 

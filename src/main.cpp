@@ -208,7 +208,9 @@ bool song_ending;	//if the song will end within the next few ms
 float song_time_period = 0;	//tracks period for extracting fft data
 const float STP = 0.04f; //how often (in seconds) to extract an FFT batch
 
-//float g_time = 0.0f;
+int song_menu_index_offset;
+
+//float g_time = 0.0f; //dummied this out b/c the steady_clock is more precise
 
 void initialization() 
 {    
@@ -589,28 +591,28 @@ void menu(int value)
 	case 14:
 		//song_time = 0;
 		songT = 0;
-		song_time_period = 0;// STP;
+		song_time_period = STP;
 		song_ending = false;
 		ah.play(0);
 		break;
 	case 15:
 		//song_time = 0;
 		songT = 0;
-		song_time_period = 0;// STP;
+		song_time_period = STP;
 		song_ending = false;
 		ah.play(1);
 		break;
 	case 16:
 		//song_time = 0;
 		songT = 0;
-		song_time_period = 0;// STP;
+		song_time_period = STP;
 		song_ending = false;
 		ah.play(2);
 		break;
 	case 17:
 		//song_time = 0;
 		songT = 0;
-		song_time_period = 0;// STP;
+		song_time_period = STP;
 		song_ending = false;
 		ah.play(3);
 		break;

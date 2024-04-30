@@ -134,13 +134,21 @@ void main()
   //^^^divisor sets range to [0.00, 0.25]
   
   //altered by QP
-  float displacement = pow(1 + (pow(noise, 2) * high_freq), 2);
+  //square the noise and freq scale to increase distinction between peaks
+  float displacement = pow(1 + (pow(noise, 2) * high_freq), 2);// * 
+  //only peaks that are perpendicular to the camera view should come forward!
+  //pow(
+  //	1 - abs(
+  //			dot(viewMat * modelMat * vec4(vertex_position, 1.0f)
+  //			, normalize(vec4 (vertex_normal, 1.0f))
+  //			)), 
+  //	2);
   vec3 newPosition = vertex_position + vertex_normal * displacement;
+  
+  vec4 ppos = viewMat * modelMat * vec4 (newPosition, 1.0f);
   
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   //*end copied bits*
-  
-  vec4 ppos = viewMat * modelMat * vec4 (newPosition, 1.0f);
   
   vec4 lpos_0 = viewMat * vec4(lightPos_0, 1.0f);
   vec4 lightDir_0 = normalize(lpos_0 - ppos);

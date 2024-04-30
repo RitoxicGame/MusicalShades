@@ -10,7 +10,7 @@ uniform vec3 lightPos_3;
 uniform vec3 lightPos_4;
 uniform vec3 lightPos_5;
 uniform float time;
-uniform float noise_level;
+//uniform float noise_level;
 //uniform float low_freq;
 uniform float high_freq;
 
@@ -130,11 +130,11 @@ void main()
   
   // Value range of perlin noise is[-sqr(N/4), sqr(N/4)], 
   // where N is the dimension. For N = 3, range is [-0.866, 0.866]
-  float noise = (cnoise(vertex_normal*2.5 + vec3(time)*1.5) + 0.866) / (8* 0.866); 
+  float noise = (cnoise(vertex_normal*2.5 + vec3(time)*1.5) + 0.866) / (2* 0.866); 
   //^^^divisor sets range to [0.00, 0.25]
   
   //altered by QP
-  float displacement = noise * (pow(noise_level + high_freq, 2));
+  float displacement = pow(1 + (pow(noise, 2) * high_freq), 2);
   vec3 newPosition = vertex_position + vertex_normal * displacement;
   
   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

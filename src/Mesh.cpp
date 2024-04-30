@@ -12,7 +12,6 @@ Mesh::Mesh()
 	vao = vbo = nbo = ibo = 0;
 	modelMat = mat4(1.0f);
 
-	//color_noiselvl = lownoise;
 	mesh_noiselvl = lownoise;
 }
 
@@ -24,12 +23,7 @@ Mesh::~Mesh()
 	delete[] vnormals;
 }
 
-//void Mesh::changeColorNoiseLevel(int noiselvl)
-//{
-//	color_noiselvl = noiselvl;
-//	cout << "color noise level: " << color_noiselvl << endl;
-//}
-void Mesh::changeMeshNoiseLevel(int noiselvl)
+void Mesh::changeMeshNoiseLevel(int noiselvl) //dummied out
 {
 	mesh_noiselvl = noiselvl;
 	cout << "mesh noise level: " << mesh_noiselvl << endl;
@@ -193,46 +187,7 @@ void Mesh::create(const char* filename, const char* v_shader_file, const char* f
 	prepareVBOandShaders(v_shader_file, f_shader_file);
 }
 
-//void Mesh::draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time) { OLD FUNCTION FROM PREVIOUS ASSIGNMENT
-//
-//	glMatrixMode(GL_MODELVIEW);
-//    glPushMatrix();
-//	
-//	if (vert_num <= 0 && tri_num <= 0)
-//		return;
-//
-//	glEnable(GL_DEPTH_TEST);
-//	glEnable(GL_LIGHTING);
-//	glEnable(GL_CULL_FACE);
-//	glPolygonMode(GL_FRONT, GL_FILL);
-//
-//
-//	glMatrixMode(GL_MODELVIEW);
-//	glPushMatrix();
-//
-//	glUseProgram(shaderProg.id);
-//	mat4 m = translate(mat4(1.0), vec3(0.0f, 2.0f, 0.0f));
-//	modelMat = scale(m, vec3(0.3f, 0.3f, 0.3f));
-//	shaderProg.setMatrix4fv("modelMat", 1, value_ptr(modelMat));
-//	shaderProg.setMatrix4fv("viewMat", 1, value_ptr(viewMat));
-//	shaderProg.setMatrix4fv("projMat", 1, value_ptr(projMat));
-//	shaderProg.setFloat3V("lightPos", 1, value_ptr(lightPos));
-//	shaderProg.setFloat("time", time);
-//	shaderProg.setFloat("offset", normal_offset);
-//
-//	//cout << glm::to_string(modelMat) << endl;
-//	//cout << glm::to_string(viewMat) << endl;
-//	//cout << glm::to_string(projMat) << endl;
-//
-//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-//	glDrawElements(GL_TRIANGLES, tri_num * 3, GL_UNSIGNED_INT, NULL);
-//
-//	glPopMatrix();
-//	glDisable(GL_POLYGON_OFFSET_FILL);
-//
-//    glPopMatrix();
-//}
-
+//vvvvv parts of this were altered by QP
 void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, float time,/* float lf, */float hf) {
 
 	glMatrixMode(GL_MODELVIEW);
@@ -270,8 +225,7 @@ void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, fl
 	shaderProg.setFloat3V("lookAt", 1, value_ptr(lookAt));
 	shaderProg.setFloat("time", time);
 	shaderProg.setFloat("offset", normal_offset);
-	//shaderProg.setInt("color_noise_level", color_noiselvl);
-	shaderProg.setFloat("noise_level", mesh_noiselvl);
+	shaderProg.setFloat("noise_level", mesh_noiselvl); //currently dummied out
 	//shaderProg.setFloat("low_freq", lf);
 	shaderProg.setFloat("high_freq", hf);
 

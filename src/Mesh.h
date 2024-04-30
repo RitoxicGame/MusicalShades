@@ -36,7 +36,7 @@ public:
 	vec3*  vertices;
 	uvec3* triangles;
 	vec3* fnormals;  // normals of triangles, size = # of triangles
-	vec3* vnormals;  // normal of vertices, computed by averaging the adajecent traingle normals; size = # of vertices
+	vec3* vnormals;  // normal of vertices, computed by averaging the adajecent[sic] traingle[sic] normals; size = # of vertices
 
 	GLuint vao, vbo, nbo, ibo;
 	ShaderProgram shaderProg;
@@ -47,7 +47,6 @@ public:
 
 	float normal_offset = 0.0f;
 
-	//int color_noiselvl;
 	float mesh_noiselvl;
 
 
@@ -60,10 +59,8 @@ public:
     */
     void create (const char* filename, const  char* v_shader_file, const char* f_shader_file);
 
-	//void draw(mat4 viewMat, mat4 projMat, vec3 lightPos, float time);
 	void draw(mat4 viewMat, mat4 projMat, list<vec3> lightpos, vec3 lookAt, float time,/* float lf, */float hf);
 
-	//void changeColorNoiseLevel(int noiselvl);
 	void changeMeshNoiseLevel(int noiselvl);
 
 private:

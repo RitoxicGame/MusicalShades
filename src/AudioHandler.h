@@ -20,12 +20,12 @@ class AudioHandler
 {
 public:
 	vector<string> song_list;	//list of songs
-	int now_playing;			//song index
-	bool is_playing;			//is the current song paused?
-	float duration;				//song duration (s), extrapolated from frames/(samplerate*channels)
+	bool is_playing;			//is there a song playing?
 
 private:
-	SndfileHandle snd;
+	float duration;				//song duration (seconds), extrapolated from frames/samplerate
+	int now_playing;			//index of the song currently being played
+	SndfileHandle snd;			//file handler for sample buffer extraction
 	float* sample_buffer;		//pointer to sample buffer for song info
 	fftwf_plan plan;			//FFTW plan holder
 	float* in;					//input buffer for FFTW
@@ -35,7 +35,12 @@ public:
 	AudioHandler(void);
 	~AudioHandler(void);
 
-	void create(list<string> songs);
+	void create(list<string> songs); //don't ask why it takes in a list but make a vector XD
+
+	//vvv don't want other programs to be able to alter these values
+
+	int nowPlaying();
+	float getDuration();
 
 	void play(int index);
 	void stop();
@@ -46,6 +51,4 @@ private:
 	void parse();
 
 	int next_pow_2(int x);
-
-//	void debug_print();
 };

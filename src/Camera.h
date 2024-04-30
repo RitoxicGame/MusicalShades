@@ -81,7 +81,7 @@ public:
 
 	// focus cam mode 
 	void CameraRotate();
-	//void CameraZoom();
+	//void CameraZoom(); //dummied out to make room for scroll-wheel zoom ~QP
 	void CameraPan();
 
 	// first-person cam mode

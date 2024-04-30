@@ -161,7 +161,7 @@ void Camera::mouseClick(int button, int state, int x, int y, int winW, int winH)
 	}
 
 	// Copied this segment from https://stackoverflow.com/questions/14378/using-the-mouse-scrollwheel-in-glu
-	// Did this so the camera zoom can just be the FRIGGIN SCROLL WHEEL for cryin out loud 
+	// Did this so the camera can be made to zoom with the scroll wheel (which I find much more intuitive)
 	// Wheel reports as button 3(scroll up) and button 4(scroll down)
 	if ((button == 3) || (button == 4)) // It's a wheel event
 	{
@@ -199,15 +199,15 @@ void Camera::ChangeScrollSpeed(int option)
 		return;
 	case slow:
 		M_ZOOM_PAR = SPD_SLOW;
-		cout << "Set Scroll to SLOW" << endl;
+		//cout << "Set Scroll to SLOW" << endl;
 		break;
 	case med:
 		M_ZOOM_PAR = SPD_MED;
-		cout << "Set Scroll to MED" << endl;
+		//cout << "Set Scroll to MED" << endl;
 		break;
 	case fast:
 		M_ZOOM_PAR = SPD_FAST;
-		cout << "Set Scroll to FAST" << endl;
+		//cout << "Set Scroll to FAST" << endl;
 		break;
 	}
 }

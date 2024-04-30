@@ -12,6 +12,8 @@ using namespace std;
 //modified by Quinn Poyneer initially for Assignment 3 submission and
 //subsequently for the Final Project of both IGME670 and IGME740
 
+//this particular file remains wholly unmodified from the original created by Prof. Peng.
+
 class ShaderProgram
 {
 public:

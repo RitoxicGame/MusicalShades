@@ -12,8 +12,8 @@
 
 using namespace std;
 
-//~QP Original*~
-//*except some implementation bits, which were taken from this: https://stackoverflow.com/questions/11140483/how-to-get-list-of-files-with-a-specific-extension-in-a-given-folder
+//~QP Original~*
+//*except some implementation bits, which were taken from their respective sources (cited inline)
 
 FileIO::FileIO(void)
 {
@@ -31,9 +31,22 @@ void FileIO::create(string dir)
 
 list<string> FileIO::filelookup(string ext)
 {
-	//std::string path(directory);
-	//std::string ext(ext);
+	//makes heavy use of this implementation: https://stackoverflow.com/a/47975458
 
-	//for(auto &p : 
-	return { "" };
+	//the filepath to search
+	std::string path(directory);
+	//the extension to look for
+	std::string ext(ext);
+
+	//the list to be returned
+	list<string> files;
+
+	for (auto& p : std::filesystem::recursive_directory_iterator(path))
+	{
+		if (p.path().extension() == ext)
+			files.push_back(p.path().stem().string());
+	}
+	for (std::list<string>::iterator i = files.begin(); i != files.end(); i++)
+		cout << *i << endl;
+	return files;
 }

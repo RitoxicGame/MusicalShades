@@ -28,6 +28,8 @@
 #include "Mesh.h"
 #include "AudioHandler.h"
 #include "sndfile.hh"
+#include "comutil.h"
+#include "FileIO.h"
 
 #include <iostream>
 #include <windows.h>
@@ -163,9 +165,9 @@ bool song_ending;	//if the song will end within the next few ms
 float song_time_period = 0;	//tracks period for extracting fft data
 const float STP = 0.04f; //how often (in seconds) to extract an FFT batch
 
-//int song_menu_index_offset;
-
 //float g_time = 0.0f; //dummied this out b/c the steady_clock is more precise
+
+FileIO f;
 
 void initialization() 
 {    
@@ -177,22 +179,25 @@ void initialization()
 	origin_time = chrono::steady_clock::now();
 	oldTime = chrono::steady_clock::now();
 
-	ah.create(
-		{
-			"sounds\\Rabi-Ribi Original Soundtrack - 45 No Remorse.wav",
-			"sounds\\07 Huujirareta Youkai.wav",
-			"sounds\\06 Mannennokigasa ni gochuui wo.wav",
-			"sounds\\18 Mahoushoujotachi no hyakunensai.wav",
-			"sounds\\25 Gouyoku na kemono no Memento (Arr.wav",
-			"sounds\\Necromantic.wav",
-			"sounds\\51_Song of Lament.wav",
-			"sounds\\39 Eien no shunmu.wav",
-			"sounds\\43 Yoru ga oritekuru ~ Evening Star.wav",
-			"sounds\\32 Ningyousaiban _ U2 Akiyama.wav",
-			"sounds\\34 Voile mahoutoshokan _ U2 Akiyama.wav",
-			"sounds\\08 Neko Miko Reimu A.wav",
-			"sounds\\18 Koi no Hyoketsu Otenba Yukemuri C.wav"
-		});
+	const wchar_t* skrelp = ROOT_DIR; //Defined with macros via preprocessor: https://stackoverflow.com/a/26268177
+	/// <summary>
+	/// <bold><i>It's a meme, Batman.</i></bold>
+	/// <a href="https://learn.microsoft.com/en-us/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-wchar_t-">also this.</a>
+	/// </summary>
+	size_t deer_size = wcslen(skrelp) + 1;
+	size_t convo = 0;
+
+	const size_t new_size = deer_size * 2;
+
+	char big_conc[] = "\\sound";
+	size_t conc_size = (strlen(big_conc) + 1) * 2;
+
+	char* new_palf = new char[new_size + conc_size]; //this one's a deep cut. if you couldn't tell, my brain is pudding right about now :melting_face:
+
+	wcstombs_s(&convo, new_palf, new_size, skrelp, _TRUNCATE);
+	_mbscat_s((unsigned char*)new_palf, new_size + conc_size, (unsigned char*)big_conc);
+
+	f.create(); 
 
 	mat4 m = translate(mat4(1.0), vec3(0.0f, 0.0f, 0.0f));
 	m = rotate(m, 3.14159f, vec3(0.0f, 1.0f, 0.0f));

@@ -1,7 +1,7 @@
 # MusicalShades (*JUST ABOUT DONE as of 04/30/2024*)
 A program that uses song information to distort a mesh via vertex shaders and perlin noise. Final project for RIT's IGME 670 and IGME 740 courses, conducted as one project with permission from both professors.
 
-#NOTES AND ATTRIBUTIONS:
+# NOTES AND ATTRIBUTIONS:
 This project is an extension of sample code provided by professor Chao Peng for an IGME 740 assignment, which set up the frameworks for passing data to and from shaders, initializing the camera and mesh, and running several of the OpenGL callbacks. Sample shaders were also provided by the professor, as was the perlin noise function used in this project's main shader; however, the lighting calculations of the relevant shader(s) (i.e. "per_Vertex_CUSTOM") is original, as is the song data processing.
 Controls for the program are displayed in the tutorials in the top-right on launch.
 

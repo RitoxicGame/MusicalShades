@@ -12,7 +12,7 @@ using namespace std;
 //modified by Quinn Poyneer initially for Assignment 3 submission and
 //subsequently for the Final Project of both IGME670 and IGME740
 
-//this particular file remains wholly unmodified from the original created by Prof. Peng.
+//this particular file remains *MOSTLY* unmodified from the original created by Prof. Peng.
 
 class ShaderProgram
 {
@@ -38,6 +38,7 @@ public:
 	void setFloat1V(const char* name, unsigned int count, const float* floatPtr);
 	void setFloat3V(const char* name, unsigned int count, const float* floatPtr);
 	void setMatrix4fv(const char* name, unsigned int count, const float* floatPtr);
+	void setFloat4V(const char* name, unsigned int count, const float* floatPtr); //~QP "original"
 	// ... feel free to add more functions to enable the setting of other data types
 
 	// setup shader sampler texturre data 

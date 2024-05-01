@@ -13,13 +13,15 @@ uniform float time;
 //uniform float noise_level;
 //uniform float low_freq;
 uniform float high_freq;
+//uniform vec3 eye;
+uniform vec4 camera_n;
 
 layout(location = 0) in vec3 vertex_position;
 layout(location = 1) in vec3 vertex_normal;
 
 out vec3 color;
 
-//This part was straight-up copied from the displacement.vert shader
+//This part remains unchanged from the displacement.vert shader
 //created by Prof. Chao Peng for the IGME740 Assignment 3 shader example code
 //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
@@ -117,43 +119,29 @@ float cnoise(vec3 P)
 }
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//*end copied bits*
+//*end unchanged bits*
 
 void main()
 {
-  //this part was also mostly* copied from the displacement.vert shader
-  //created by Prof. Chao Peng for the
-  //IGME740 Assignment 3 shader example code
-  //*any parts that were not copied or were altered will be marked as such
-  //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-  
-  
   // Value range of perlin noise is[-sqr(N/4), sqr(N/4)], 
   // where N is the dimension. For N = 3, range is [-0.866, 0.866]
   float noise = (cnoise(vertex_normal*2.5 + vec3(time)*1.5) + 0.866) / (2* 0.866); 
-  //^^^divisor sets range to [0.00, 0.25]
   
   //altered by QP
+  //need the vertex normal to be in model space
+  vec4 normal = normalize (modelMat * vec4(vertex_normal, 0.0f));
+  
   //square the noise and freq scale to increase distinction between peaks
-  float displacement = pow(1 + (pow(noise, 2) * high_freq), 2);// * 
-  //only peaks that are perpendicular to the camera view should come forward!
-  //pow(
-  //	1 - abs(
-  //			dot(viewMat * modelMat * vec4(vertex_position, 1.0f)
-  //			, normalize(vec4 (vertex_normal, 1.0f))
-  //			)), 
-  //	2);
-  vec3 newPosition = vertex_position + vertex_normal * displacement;
+  float displacement = pow(pow(noise, 2) * high_freq, 2) * 
+  //only peaks that are roughly perpendicular to the camera view should jut out!
+  						pow(abs(dot(normalize(camera_n), normal)) - 1, 2);
+  vec3 newPosition = vertex_position + (vertex_normal * displacement);
   
   vec4 ppos = viewMat * modelMat * vec4 (newPosition, 1.0f);
-  
-  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  //*end copied bits*
   
   vec4 lpos_0 = viewMat * vec4(lightPos_0, 1.0f);
   vec4 lightDir_0 = normalize(lpos_0 - ppos);
   
-  //vec4 ppos2 = viewMat * modelMat * vec4 (newPosition, 1.0f); //redundant?
   vec4 lpos_1 = viewMat * vec4(lightPos_1, 1.0f);
   vec4 lightDir_1 = normalize(lpos_1 - ppos);
   
@@ -169,7 +157,7 @@ void main()
   vec4 lpos_5 = viewMat * vec4(lightPos_5, 1.0f);
   vec4 lightDir_5 = normalize(lpos_5 - ppos);
   
-  vec4 normal = normalize (viewMat * modelMat * vec4(vertex_normal, 0.0f));
+  normal = normalize (viewMat * modelMat * vec4(vertex_normal, 0.0f));
   
   float intensity_0 = max(dot(normal, lightDir_0), 0.0);
   float intensity_1 = max(dot(normal, lightDir_1), 0.0);
@@ -186,7 +174,7 @@ void main()
   vec4 r_5 = (2 * normal * dot(normal, lightDir_5)) - lightDir_5;
   
   //thank you to Ed for helping me figure out the specular components!
-  float alpha = 20;
+  float alpha = 20; //completely arbitrary
   
   //yellow
   float iR_0 = 0.20 + (2*intensity_0) + pow(max(dot(normalize(-ppos), r_0), 0.0), alpha);

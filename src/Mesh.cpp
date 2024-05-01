@@ -26,7 +26,7 @@ Mesh::~Mesh()
 void Mesh::changeMeshNoiseLevel(int noiselvl) //dummied out
 {
 	mesh_noiselvl = noiselvl;
-	cout << "mesh noise level: " << mesh_noiselvl << endl;
+	//cout << "mesh noise level: " << mesh_noiselvl << endl;
 }
 
 void Mesh::computeNormals()
@@ -188,7 +188,7 @@ void Mesh::create(const char* filename, const char* v_shader_file, const char* f
 }
 
 //vvvvv parts of this were altered by QP
-void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, float time,/* float lf, */float hf) {
+void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, /*vec3 eye,*/ vec4 camera_n, float time,/* float lf, */float hf) {
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -222,7 +222,8 @@ void Mesh::draw(mat4 viewMat, mat4 projMat, list<vec3> lightPos, vec3 lookAt, fl
 		//	+ std::to_string((*i).z) + " }";
 		//cout << str << endl;
 	}
-	shaderProg.setFloat3V("lookAt", 1, value_ptr(lookAt));
+	//shaderProg.setFloat3V("eye", 1, value_ptr(eye));
+	shaderProg.setFloat4V("camera_n", 1, value_ptr(camera_n));
 	shaderProg.setFloat("time", time);
 	shaderProg.setFloat("offset", normal_offset);
 	shaderProg.setFloat("noise_level", mesh_noiselvl); //currently dummied out

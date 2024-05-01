@@ -41,6 +41,9 @@
 *.png
 *.zip
 *.def
+[Uu]niversal_library/lib
+[Uu]niversal_library/bin
+[Uu]niversal_library/include
 
 #Stuff from VS gitignore:
 

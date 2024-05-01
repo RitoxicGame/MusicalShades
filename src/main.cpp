@@ -42,10 +42,6 @@ using namespace glm;
 // Original code was written by Prof. Chao Peng for IGME740 Assignment 3 project example,
 // modified by Quinn Poyneer initially for Assignment 3 submission and
 // subsequently for the Final Project of both IGME670 and IGME740
-// 
-// Uses libsndfile for audio data handling: https://github.com/libsndfile/libsndfile
-// Tutorial for basic use found here: https://cindybui.me/pages/blogs/visual_studio_0
-// 
 
 int g_winWidth  = 1024;
 int g_winHeight = 512;
@@ -53,75 +49,29 @@ int g_winHeight = 512;
 Camera g_cam;
 Text g_text;
 
+int text_display_select;
+
 enum ScrollSpeed { slowscroll, medscroll, fastscroll };
 enum OrbitSpeed { sloworbit, medorbit, fastorbit, ultraorbit, stoporbit };
-enum NoiseLevels { nonoise, lownoise, mednoise, highnoise };
+enum NoiseLevels { nonoise, lownoise, mednoise, highnoise }; //dummied out
+enum TextDisplay { tut1, tut2, lights, mesh };
 
 unsigned char g_keyStates[256];
 
 char v_shader_file[] =
-//".\\shaders\\basic.vert";
-//".\\shaders\\displacement.vert";		// vertex displacement shader with perlin noise
-//".\\shaders\\perVert_lambert.vert";	// basic lambert lighting  
-//".\\shaders\\perVert_phong.vert";		// the big boy PHONG
-//".\\shaders\\perFrag_lambert.vert";	// basic lambert lighting with per-fragment implementation
-//".\\shaders\\perFrag_phong.vert";		// the big boy PHONG (per frag)
-//".\\shaders\\toon_shading.vert";		// basic toon shading with per-fragment implementation
-// 
-//
 ".\\shaders\\per_Vertex_CUSTOM.vert";	// CUSTOM phong + displacement for warping a sphere in time with music
 
 
 char f_shader_file[] =
-//".\\shaders\\basic.frag";
-//".\\shaders\\displacement.frag";		// vertex displacement shader with perlin noise
-//".\\shaders\\perVert_lambert.frag";	// basic lambert shading 
-//".\\shaders\\perVert_phong.frag";		// the big boy PHONG
-//".\\shaders\\perFrag_lambert.frag";	// basic lambert shading with per-fragment implementation
-//".\\shaders\\perFrag_phong.frag";		// the big boy PHONG (per frag)
-//".\\shaders\\toon_shading.frag";		// basic toon shading with per-fragment implementation
-//
-// 
 ".\\shaders\\per_Vertex_CUSTOM.frag";	// CUSTOM phong + displacement for warping a sphere in time with music
 
-
-//char v_shader_file2[] =
-//".\\shaders\\basic.vert";
-//".\\shaders\\displacement.vert";		// vertex displacement shader with perlin noise
-// 
-//".\\shaders\\perVert_lambert.vert";	// basic lambert lighting
-//".\\shaders\\perVert_phong.vert";		// the big boy PHONG
-//
-//".\\shaders\\perFrag_lambert.vert";	// basic lambert lighting with per-fragment implementation
-//".\\shaders\\perFrag_phong.vert";		// the big boy PHONG (per frag)
-// 
-//".\\shaders\\toon_shading.vert";		// basic toon shading with per-fragment implementation
-//
-//char f_shader_file2[] =
-//".\\shaders\\basic.frag";
-//".\\shaders\\displacement.frag";		// vertex displacement shader with perlin noise
-//".\\shaders\\perVert_lambert.frag";	// basic lambert shading
-//".\\shaders\\perVert_phong.frag";		// the big boy PHONG
-//
-//".\\shaders\\perFrag_lambert.frag";	// basic lambert shading with per-fragment implementation
-//".\\shaders\\perFrag_phong.frag";		// the big boy PHONG (per frag)
-// 
-//".\\shaders\\toon_shading.frag";		// basic toon shading with per-fragment implementation
-
-const char meshFile[128] =
+const char meshFile[128] = //technically works with the other meshes, but it's not quite as aesthetically pleasing
 "Mesh/sphere.obj";
 //"Mesh/bunny2K.obj";
 //"Mesh/teapot.obj";
 //"Mesh/teddy.obj";
 
-//const char meshFile2[128] =
-//"Mesh/sphere.obj";
-//"Mesh/bunny2K.obj";
-//"Mesh/teapot.obj";
-//"Mesh/teddy.obj";
-
 Mesh g_mesh;
-//Mesh g_mesh2;
 
 chrono::steady_clock::time_point oldTime; //clock/timer(s) used for FFT batch sizing
 chrono::duration<double> elapsed;
@@ -201,8 +151,12 @@ vec3 g_lightPosAlt5 = vec3(
 int swap_lights = 0; //which light is currently selected
 
 AudioHandler ah;	//audio handler -- holds song list, plays music, and parses song data
-float low_freq;		//average low-frequency amplitude
-float high_freq;	//average high-frequency amplitude
+float low_freq;		//average low-frequency magnitude
+float high_freq;	//average high-frequency magnitude
+float basehf;		//unmodified high-frequency magnitude, for display purposes
+int d_threshold = 1;//distortion control threshold, dec and inc by pressing '-' or '='
+int d_boost = 1;	//distortion boost, dec and inc with '[' or ']'
+
 double songT = 0;	//time since the song began -- this is a double to match precision with the clock
 bool song_ending;	//if the song will end within the next few ms
 
@@ -226,20 +180,24 @@ void initialization()
 	ah.create(
 		{
 			"sounds\\Rabi-Ribi Original Soundtrack - 45 No Remorse.wav",
+			"sounds\\07 Huujirareta Youkai.wav",
+			"sounds\\06 Mannennokigasa ni gochuui wo.wav",
+			"sounds\\18 Mahoushoujotachi no hyakunensai.wav",
 			"sounds\\25 Gouyoku na kemono no Memento (Arr.wav",
 			"sounds\\Necromantic.wav",
-			"sounds\\rrgo.wav",
-			"sounds\\zx_bgm024.wav"
+			"sounds\\51_Song of Lament.wav",
+			"sounds\\39 Eien no shunmu.wav",
+			"sounds\\43 Yoru ga oritekuru ~ Evening Star.wav",
+			"sounds\\32 Ningyousaiban _ U2 Akiyama.wav",
+			"sounds\\34 Voile mahoutoshokan _ U2 Akiyama.wav",
+			"sounds\\08 Neko Miko Reimu A.wav",
+			"sounds\\18 Koi no Hyoketsu Otenba Yukemuri C.wav"
 		});
 
 	mat4 m = translate(mat4(1.0), vec3(0.0f, 0.0f, 0.0f));
 	m = rotate(m, 3.14159f, vec3(0.0f, 1.0f, 0.0f));
 	g_mesh.modelMat = scale(m, vec3(0.5f, 0.5f, 0.5f));
 	g_mesh.create(meshFile, v_shader_file, f_shader_file);
-
-	//mat4 m2 = translate(mat4(1.0), vec3(3.0f, 2.0f, 0.0f));
-	//g_mesh2.modelMat = scale(m2, vec3(0.5f, 0.5f, 0.5f));
-	//g_mesh2.create(meshFile, v_shader_file2, f_shader_file2);
 
 	// add any stuff you want to initialize ...
 }
@@ -275,7 +233,7 @@ void setLightPos()
 	//could've probably used gl rotate methods for this, but this was more intuitive (and more fun) for me
 
 	//adjust orbit radius based on the low frequency samples' average magnitude within the last given song_time_perod
-	orbitrad = MIN_ORBIT_RAD * (1 + (low_freq/* * (10 * (-1 * powf(song_time_period - std::sqrtf(.05), 2) + .05))*/));
+	orbitrad = MIN_ORBIT_RAD * (1 + (low_freq * (20 * (-1 * powf(song_time_period, 2) + STP))));
 
 	if (orbitSpeedDenom > 0) //only change the angles if the lights are moving (also avoid dividing by 0)
 	{
@@ -359,6 +317,7 @@ void drawLights()
 //dislpay the text
 void drawText()
 {
+	int text_row = 1;
 	string str = "";
 	if (g_cam.isFocusMode()) {
 		str = "Cam mode: Focus";
@@ -366,61 +325,208 @@ void drawText()
 	else if (g_cam.isFPMode()) {
 		str = "Cam mode: FP";
 	}
-	g_text.draw(10, 30, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	text_row++;
 
-	str = "Currently selected light: " + std::to_string(swap_lights);
-	g_text.draw(10, 45, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-
-	str = "e";
-	g_text.draw(10, 60, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-
-	str = "Current Time (sec): " + (ah.is_playing && !song_ending
+	str = "Song Time Elapsed: " + (ah.is_playing && !song_ending
 		?
-		//std::to_string(((int)songT) / 60) + ":" + std::to_string((int)songT % 60)
-		std::to_string(songT)
+		std::to_string((int)songT / 60) + ":" +
+		((int)(songT / 10) % 10 == 0 ? "0" : "") +
+		std::to_string((int)songT % 60)
 		:
-		"-----");
-	g_text.draw(10, 75, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		"---:--");
+	g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	text_row++;
 
 	str = "Song Duration: " + (ah.is_playing && !song_ending
 		?
-		//std::to_string((int)ah.duration / 60) + ":" + std::to_string((int)ah.duration % 60)
-		std::to_string(ah.getDuration())
+		std::to_string((int)ah.getDuration() / 60) + ":" + 
+		((int)(ah.getDuration() / 10) % 10 == 0 ? "0" : "") +
+		std::to_string((int)ah.getDuration() % 60)
 		:
-		"-----");
-	g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-
-	//str = "FPS: " + std::to_string(1000/dT);
-	//g_text.draw(10, 75, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-	//
-	//str = "Frame Time: " + std::to_string(dT);
-	//g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-
-	str = "Theta value: " + std::to_string(theta);
-	g_text.draw(10, 105, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-
-	str = "ThetaAlt value: " + std::to_string(thetaAlt);
-	g_text.draw(10, 120, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		"---:--");
+	g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	text_row++;
 
 	str = "Current BGM: " + (ah.is_playing && !song_ending ? ah.song_list[ah.nowPlaying()] : "N/A");
-	g_text.draw(10, 135, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	text_row++;
 
+	switch (text_display_select)
+	{
+	default:
+		break;
 
-	//str = "vertex count: " + std::to_string(g_mesh.vert_num);
-	//g_text.draw(10, 45, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-	//str = "triangle count: " + std::to_string(g_mesh.tri_num);
-	//g_text.draw(10, 60, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-	//
-	//str = "light position: (" + std::to_string(g_lightPos.x) + ", " 
-	//	+ std::to_string(g_lightPos.y) + ", "
-	//	+ std::to_string(g_lightPos.z) + ")";
-	//g_text.draw(10, 75, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
-	//
-	//str = "2nd light position: (" + std::to_string(g_lightPosAlt.x) + ", "
-	//	+ std::to_string(g_lightPosAlt.y) + ", "
-	//	+ std::to_string(g_lightPosAlt.z) + ")";
-	//g_text.draw(10, 90, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+	case tut1:
+		if (g_cam.isFPMode())
+		{
+			str = "Left Click to rotate, G/J to strafe, Y/H to move Forward/Backward";
+		}
+		else
+		{
+			str = "ALT+Left Click to rotate, ALT+Middle Mouse to pan, Scroll to zoom";
+		}
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
 
+		str = "Right Click to open menu";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "ESC to exit program";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Press \"-\" / \"=\" to decrement/increment distortion threshold";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Press \"[\" / \"]\" to lower/boost distortion (see value in Mesh text display)";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Press \"q\" to reset light positions";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Press \"c\" to change camera modes";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		break;
+
+	case tut2:
+		str = "This program uses FFTW and libsndfile to deform a mesh in real time based on sound file data.";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "This is accomplished by first performing a DFT on a batch of samples, then";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "passing the the constituent waves' average magnitude values into a vertex shader.";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "High frequencies (4186.01Hz >= x > 138.59Hz) distort the mesh";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Low frequencies (138.59Hz >= x >= 27.5Hz) affect the lights' orbit";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Distortion threshold (arbitrary) clamps distortion asymptotically (min 4, max 20)";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Distortion boost (arbitrary) increases distortion magnitude (min 1, max 20)";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		break;
+
+	case lights:
+		str = "Displace lights (+/-) across their axes of orbit with letter keys:";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		str = "y = R/F, x = D/A, z = S/W";
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Currently selected light: " + std::to_string(swap_lights);
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Light " + std::to_string(swap_lights) + " position: (";
+		switch (swap_lights)
+		{
+		case 0:
+			str += std::to_string(g_lightPos.x) + ", "
+				+ std::to_string(g_lightPos.y) + ", "
+				+ std::to_string(g_lightPos.z) + ")";
+			break;
+		case 1:
+			str += std::to_string(g_lightPosAlt.x) + ", "
+				+ std::to_string(g_lightPosAlt.y) + ", "
+				+ std::to_string(g_lightPosAlt.z) + ")";
+			break;
+		case 2:
+			str += std::to_string(g_lightPosAlt2.x) + ", "
+				+ std::to_string(g_lightPosAlt2.y) + ", "
+				+ std::to_string(g_lightPosAlt2.z) + ")";
+			break;
+		case 3:
+			str += std::to_string(g_lightPosAlt3.x) + ", "
+				+ std::to_string(g_lightPosAlt3.y) + ", "
+				+ std::to_string(g_lightPosAlt3.z) + ")";
+			break;
+		case 4:
+			str += std::to_string(g_lightPosAlt4.x) + ", "
+				+ std::to_string(g_lightPosAlt4.y) + ", "
+				+ std::to_string(g_lightPosAlt4.z) + ")";
+			break;
+		case 5:
+			str += std::to_string(g_lightPosAlt5.x) + ", "
+				+ std::to_string(g_lightPosAlt5.y) + ", "
+				+ std::to_string(g_lightPosAlt5.z) + ")";
+			break;
+		}
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		str = "Theta " + std::to_string(swap_lights) + " value: ";
+		switch (swap_lights)
+		{
+		case 0:
+			str += std::to_string(theta);
+			break;
+		case 1:
+			str += std::to_string(thetaAlt);
+			break;
+		case 2:
+			str += std::to_string(thetaAlt2);
+			break;
+		case 3:
+			str += std::to_string(thetaAlt3);
+			break;
+		case 4:
+			str += std::to_string(thetaAlt4);
+			break;
+		case 5:
+			str += std::to_string(thetaAlt5);
+			break;
+		}
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Orbit radius: " + std::to_string(orbitrad);
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+
+		str = "Delta Theta (rads per draw call): " + (orbitSpeedDenom != 0 ? std::to_string((pi<float>() * dT) / orbitSpeedDenom) : "N/A");
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		break;
+
+	case mesh:
+		str = "Vertex count: " + std::to_string(g_mesh.vert_num);
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		str = "Triangle count: " + std::to_string(g_mesh.tri_num);
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		str = "Distortion threshold (min 4, max 20): " + std::to_string(d_threshold+3);
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		str = "Distortion boost (min 1, max 20): " + std::to_string(d_boost);
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		str = "High-frequency portion: " + std::to_string(basehf);
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		str = "High-frequency portion (modified): " + std::to_string(((12.0f * d_threshold) / pi<float>()) * std::atanf((d_boost / (4.0f * d_threshold)) * basehf));
+		g_text.draw(10, text_row * 15, const_cast<char*>(str.c_str()), g_winWidth, g_winHeight);
+		text_row++;
+		break;
+	}
 }
 
 void display()
@@ -429,19 +535,13 @@ void display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mat4 mvp = g_cam.projMat * g_cam.viewMat;
-	//g_time = (float)glutGet(GLUT_ELAPSED_TIME) / 1000.0f; //moved this up here for ~reasons~
-	//cout << std::to_string(deltaT) << endl;
 
 	//setting up deltaT vars
-	//deltaT = g_time - oldT;
-	//oldT = g_time;
-
 	total_time = chrono::duration_cast<chrono::duration<double>>(chrono::steady_clock::now() - origin_time);
 	elapsed = chrono::duration_cast<chrono::duration<double>>(chrono::steady_clock::now() - oldTime);
 	oldTime = chrono::steady_clock::now();
 
 	dT = elapsed.count();
-	//cout << std::to_string(pi<float>() * dT) + " clock dT" << endl;
 
 	setLightPos();
 
@@ -455,13 +555,15 @@ void display()
 			low_freq = 0;
 			high_freq = 0;
 
-			//cout << "Steady Clock has time at " + std::to_string(songT) + ", whereas ";
-
 			//song will end within approximately ten draw calls?
 			song_ending = ah.extractfft((float)songT, song_time_period, low_freq, high_freq);
 
+			basehf = high_freq;
+
 			//cout << "Low freq avg m = " + std::to_string(low_freq) +
 			//	"; High freq avg m = " + std::to_string(high_freq) << endl;
+
+			high_freq = ((12.0f*d_threshold)/ pi<float>()) * std::atanf((d_boost/(4.0f*d_threshold)) * high_freq); //limits noise based on user input
 
 			songT += song_time_period;
 			song_time_period = 0;
@@ -469,7 +571,7 @@ void display()
 	}
 	else if(songT > 0)
 	{
-		cout << "Song ended at time: " + std::to_string(songT) + " / " + std::to_string(ah.getDuration()) << endl;
+		//cout << "Song ended at time: " + std::to_string(songT) + " / " + std::to_string(ah.getDuration()) << endl;
 		songT = 0;
 		high_freq = 0;
 		low_freq = 0;
@@ -495,7 +597,7 @@ void display()
 
 	g_mesh.draw(g_cam.viewMat, g_cam.projMat, 
 		{ g_lightPos, g_lightPosAlt, g_lightPosAlt2, g_lightPosAlt3, g_lightPosAlt4, g_lightPosAlt5 }, /*list of light position vectors*/
-		vec3(g_cam.lookat.x, g_cam.lookat.y, g_cam.lookat.z), 
+		(g_cam.eye - g_cam.lookat),
 		(float)total_time.count(), high_freq);
 
     glutSwapBuffers();
@@ -606,30 +708,18 @@ void menu(int value)
 			high_freq = 0;
 			low_freq = 0;
 			break;
-			//case 14:
-			//	songT = 0;
-			//	song_time_period = STP;
-			//	song_ending = false;
-			//	ah.play(0);
-			//	break;
-			//case 15:
-			//	songT = 0;
-			//	song_time_period = STP;
-			//	song_ending = false;
-			//	ah.play(1);
-			//	break;
-			//case 16:
-			//	songT = 0;
-			//	song_time_period = STP;
-			//	song_ending = false;
-			//	ah.play(2);
-			//	break;
-			//case 17:
-			//	songT = 0;
-			//	song_time_period = STP;
-			//	song_ending = false;
-			//	ah.play(3);
-			//	break;
+		case 14:
+			text_display_select = tut1;
+			break;
+		case 15:
+			text_display_select = tut2;
+			break;
+		case 16:
+			text_display_select = lights;
+			break;
+		case 17:
+			text_display_select = mesh;
+			break;
 
 				//....
 
@@ -664,28 +754,28 @@ void createMenu()
 	glutAddMenuEntry("Fast", 6 + song_index_offset);
 	glutAddMenuEntry("Ultra", 7 + song_index_offset);
 
+	int textMenu = glutCreateMenu(menu);
+	glutAddMenuEntry("Controls", 14 + song_index_offset);
+	glutAddMenuEntry("Mechanical Explanation", 15 + song_index_offset);
+	glutAddMenuEntry("Light Stats", 16 + song_index_offset);
+	glutAddMenuEntry("Mesh Data", 17 + song_index_offset);
+
 	//int meshNoiseMenu = glutCreateMenu(menu);
 	//glutAddMenuEntry("None", 9 + song_index_offset);
 	//glutAddMenuEntry("Low", 10 + song_index_offset);
 	//glutAddMenuEntry("Med", 11 + song_index_offset);
 	//glutAddMenuEntry("High", 12 + song_index_offset);
 
-	//old hard-coded song menu approach
-	//int songSelectMenu = glutCreateMenu(menu);
-	//glutAddMenuEntry("Rabi-Ribi Original Soundtrack - 45 No Remorse.wav", 14);
-	//glutAddMenuEntry("25 Gouyoku na kemono no Memento (Arrange Ver).wav", 15);
-	//glutAddMenuEntry("Necromantic.wav", 16);
-	//glutAddMenuEntry("rrgo.wav", 17);
-
 	//....
 
 	glutCreateMenu(menu);
 	glutAddMenuEntry("Reset Camera", 0 + song_index_offset);
-	glutAddMenuEntry("Stop Playback", 13 + song_index_offset);
+	glutAddSubMenu("Text Widget Display", textMenu);
 	glutAddSubMenu("Scroll Zoom Speed", scrollMenu);
 	glutAddSubMenu("Light Orbit Speed", orbitMenu);
 	//glutAddSubMenu("Mesh Noise Level", meshNoiseMenu);
 	glutAddSubMenu("Song Selection", songSelectMenu);
+	glutAddMenuEntry("Stop Playback", 13 + song_index_offset);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
@@ -717,12 +807,16 @@ void keyboard(unsigned char key, int x, int y)
             g_cam.PrintProperty();
             break;
 		case'-':
-			g_mesh.normal_offset += 0.01;
-			//glutPostRedisplay();
+			if (d_threshold > 1) d_threshold--;
 			break;
 		case'=':
-			g_mesh.normal_offset -= 0.01;
-			//glutPostRedisplay();
+			if (d_threshold < 17) d_threshold++;
+			break;
+		case'[':
+			if (d_boost > 1) d_boost--;
+			break;
+		case']':
+			if (d_boost < 20) d_boost++;
 			break;
 		case'r':
 			switch(swap_lights) 

@@ -17,6 +17,11 @@ using namespace std;
 
 //~QP Original~
 
+// Uses libsndfile for audio data handling: https://github.com/libsndfile/libsndfile
+// Tutorial for some basic uses found here: https://cindybui.me/pages/blogs/visual_studio_0
+//uses FFTW for DFT implementation: https://www.fftw.org
+
+
 //For simultaneously playing and parsing audio files
 AudioHandler::AudioHandler(void)
 {
@@ -98,18 +103,20 @@ void AudioHandler::parse() //implementation inspired by this tutorial: https://c
 }
 
 /// <summary>
-/// Compute the FFT and overwrite the 
+/// Compute the FFT and overwrite the float values for average magnitudes of low and high frequency waves
 /// Some parts were adapted from <a href="https://cindybui.me/pages/blogs/visual_studio_0#fftwDemocode">an online tutorial by Cindy Bui</a>
 /// </summary>
 /// <param name="time">= time (seconds) since the song began</param>
 /// <param name="dt">= delta time (seconds)</param>
-/// <param name="lf">= average magnitude of low-frequency waves, where freq is <i>between 27.5Hz (lowest piano note and 261.63Hz (middle C)</i></param>
-/// <param name="hf">= average magnitude of high-frequency waves, where freq is <i>above 261.63Hz (middle C) but no greater than 4186.01Hz (highest piano note)</i></param>
+/// <param name="lf">= average magnitude of low-frequency waves, where freq is <i>between 27.5Hz (lowest piano note) and 138.59Hz (C3)</i></param>
+/// <param name="hf">= average magnitude of high-frequency waves, where freq is <i>above 138.59Hz (C3) but no greater than 4186.01Hz (highest piano note)</i></param>
 /// <returns>returns whether or not the song will end within one dT (fractions of a second, under normal circumstances)</returns>
 bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 {
 	dt = min(dt, 1.0f); //failsafe in case program starts running slowly: limits update batches to 1 second. this shouldn't need to come into play outside of debugging
+
 	bool song_ending = false; //whether or not the song is about to end
+
 	unsigned int batch_size = 0; //the number of samples to compute in this run
 
 	if (sample_buffer) { //can't read the samples if there <i>are</i> no samples XD
@@ -122,15 +129,17 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 			song_ending = true;
 			batch_size = floor((duration - time) * snd.samplerate() * snd.channels());
 		}
-		//cout << "planning start" << endl;
+
 		int padded_length = next_pow_2(batch_size); //this part's from the above tutorial. I don't know why she does it like this, but it can't hurt.
 		in = fftwf_alloc_real((size_t)padded_length + 1);
 		if (!in) return true; //if one of these things comes out null/fails to allocate, then the song's probably over.
+
 		out = fftwf_alloc_complex(sizeof(fftwf_complex) * batch_size);
 		if (!out) return true;
+
 		plan = fftwf_plan_dft_r2c_1d(batch_size, in, out, FFTW_ESTIMATE); //libsndfile's readf() returns only real data, so we use a real-to-complex DFT
 		if (!plan) return true; 
-		//cout << "planning end" << endl;
+
 		for (int i = 0; i < batch_size; i += 1)//copy the batch from sample buffer to the input buffer
 		{
 			if ((int)(i + (time * snd.samplerate())) > snd.frames()) //array-index-oob protection (possibly redundant)
@@ -153,20 +162,25 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 
 		//look at FFT results and update lf and hf accordingly
 		for (int i = 0; i < floor(batch_size / 2) + 1; i++)
-		{//for an input buffer of length N, a real-to-complex FFT will have N/2 + 1 (rounded down) indices.
+
+		 //for an input buffer of length N, a real-to-complex FFT will have N/2 + 1 (rounded down) indices.
 		 //see also the documentation in section 2.3: One-Dimensional DFTs of Real Data 
 		 //(begins on pg 12 of the pdf) https://www.fftw.org/fftw3.pdf
 
-			//special thanks to this guy https://youtu.be/3aOaUv3s8RY?si=_2QVU01SvJWt6xV3 
-			//for his videos https://youtu.be/rUtz-471LkQ?si=6SXXXYBIAnJ64_b6 on FFT analysis
+		 //special thanks to this guy https://youtu.be/3aOaUv3s8RY?si=_2QVU01SvJWt6xV3 
+		 //for his videos https://youtu.be/rUtz-471LkQ?si=6SXXXYBIAnJ64_b6 on FFT analysis
 
+		{
 			//find the frequency of the indexed wave
-			freq = ((float)i / (floor(batch_size / 2) + 1))*snd.samplerate();
+			freq = (float)(i / (floor(batch_size / 2) + 1))*snd.samplerate();
+
 			//calculate the magnitude of the wave via the pythagorean theorem
 			mag = sqrtf(powf(std::real(out[i][0]), 2) + powf(std::imag(out[i][1]), 2));
 
+			mag *= 1 + (abs(i - (floor(batch_size / 2) + 1)) / (floor(batch_size / 2) + 1)); //scale based on relative frequency
+
 			//ignoring frequencies outside piano range (freq must be between 27.5Hz and 4186.01Hz)
-			if (freq >= 27.5f && freq <= 261.63f) //anything at or below c4 is considered low frequency
+			if (freq >= 27.5f && freq <= 138.59f) //anything at or below c3 is considered low frequency
 			{
 				lf += (int)mag; //cast as int to filter out any noise (i.e. anything with a magnitude < 1)
 			}					//(most waves seem to give non-zero magnitudes even if they sound silent)
@@ -178,6 +192,8 @@ bool AudioHandler::extractfft(float time, float dt, float &lf, float &hf)
 
 		lf /= floor(batch_size / 2) + 1; //get the average magnitude for low/high freq waves by dividing
 		hf /= floor(batch_size / 2) + 1; //by output buffer size.
+
+		//cout<< "lf: " << lf << "\t-- hf: " << hf << endl;
 
 		//free up the memory allocated to the FFTW objects
 		fftwf_destroy_plan(plan);

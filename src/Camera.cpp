@@ -72,6 +72,7 @@ void Camera::PrintProperty()
 	cout<<"n = "<<axis_n.x <<", "<<axis_n.y<<", "<<axis_n.z<<endl;
 	cout<<"u = "<<axis_u.x<<", "<<axis_u.y<<", "<<axis_u.z<<endl;
 	cout<<"v = "<<axis_v.x<<", "<<axis_v.y<<", "<<axis_v.z<<endl;
+	cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	//cout<<"fbl = "<<frustum.fbl.x<<", "<<frustum.fbl.y<<", "<<frustum.fbl.z<<endl;
 	//cout<<"fbr = "<<frustum.fbr.x<<", "<<frustum.fbr.y<<", "<<frustum.fbr.z<<endl;
 	//cout<<"ftl = "<<frustum.ftl.x<<", "<<frustum.ftl.y<<", "<<frustum.ftl.z<<endl;
@@ -84,6 +85,7 @@ void Camera::set(float eye_x, float eye_y, float eye_z,
 				 int winW, int winH,
 				 float p_angle, float p_near, float p_far)
 {
+	world_up.y = 1; //set/reset camera position *and world space up direction* ~QP
 	eye = vec4(eye_x, eye_y, eye_z, 1.0f);
 	lookat = vec4(lookat_x, lookat_y, lookat_z, 1.0f);
 	

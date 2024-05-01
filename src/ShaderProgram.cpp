@@ -86,6 +86,19 @@ void ShaderProgram::setFloat3V(const char* name, unsigned int count, const float
 	}
 }
 
+//~QP
+void ShaderProgram::setFloat4V(const char* name, unsigned int count, const float* floatPtr)
+{
+	unsigned int loc = glGetUniformLocation(id, name);
+	if (loc == -1) {
+		return;
+		//cout << "Uniform float3 vector: " << name << " doesn't exist." << endl;
+	}
+	else {
+		glUniform4fv(loc, count, floatPtr);
+	}
+}
+
 void ShaderProgram::setMatrix4fv(const char* name, unsigned int count, const float* floatPtr)
 {
 	unsigned int loc = glGetUniformLocation(id, name);

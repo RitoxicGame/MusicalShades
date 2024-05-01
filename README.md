@@ -9,7 +9,9 @@ For legal reasons, .wav files are not included. In order to test with custom fil
 
 This code makes use of the following libraries: 
 > <a href=http://www.mega-nerd.com/libsndfile/>libsndfile</a>, which is released under the <a href=https://www.gnu.org/licenses/lgpl-3.0.txt>GNU Lesser General Public License</a>.
-> <a href=https://www.fftw.org>fftw</a>, which is released under the <a href=https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>GNU General Public License ver. 2.0</a> <a href=https://www.fftw.org/doc/License-and-Copyright.html>and beyond</a>
+> 
+><a href=https://www.fftw.org>fftw</a>, which is released under the <a href=https://www.gnu.org/licenses/old-licenses/gpl-2.0.html>GNU General Public License ver. 2.0</a> <a href=https://www.fftw.org/doc/License-and-Copyright.html>and beyond</a>
+> 
 > <a href=https://github.com/freeglut/freeglut>freeglut</a> and <a href=https://glew.sourceforge.net>glew</a>
 
 To run this program, download the relevant libraries/headers and place them in the designated universal_library directory.

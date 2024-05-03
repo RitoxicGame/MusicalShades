@@ -17,6 +17,9 @@
 #else
 #include <GL/freeglut.h>
 #endif
+// https://stackoverflow.com/a/54542871 fixes a weird build error I had
+#define _HAS_STD_BYTE 0
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -32,7 +35,6 @@
 #include "FileIO.h"
 
 #include <iostream>
-#include <windows.h>
 #include <mmsystem.h>
 #include <chrono>
 #include <ctime>
@@ -180,25 +182,16 @@ void initialization()
 	oldTime = chrono::steady_clock::now();
 
 	const wchar_t* skrelp = ROOT_DIR; //Defined with macros via preprocessor: https://stackoverflow.com/a/26268177
-	/// <summary>
-	/// <bold><i>It's a meme, Batman.</i></bold>
-	/// <a href="https://learn.microsoft.com/en-us/cpp/text/how-to-convert-between-various-string-types?view=msvc-170#example-convert-from-wchar_t-">also this.</a>
-	/// </summary>
-	size_t deer_size = wcslen(skrelp) + 1;
-	size_t convo = 0;
 
-	const size_t new_size = deer_size * 2;
+	wstring basicskrelp(skrelp);
 
-	char big_conc[] = "\\sound";
-	size_t conc_size = (strlen(big_conc) + 1) * 2;
+	std::string dir_god = std::string(basicskrelp.begin(), basicskrelp.end());
 
-	char* new_palf = new char[new_size + conc_size]; //this one's a deep cut. if you couldn't tell, my brain is pudding right about now :melting_face:
+	//wcout << basicskrelp;
+	//cout << "vs." << dir_god << endl;
 
-	wcstombs_s(&convo, new_palf, new_size, skrelp, _TRUNCATE);
-	_mbscat_s((unsigned char*)new_palf, new_size + conc_size, (unsigned char*)big_conc);
-
-	f.create(); 
-
+	f.create(dir_god);
+	ah.create(f.filelookup(".wav"));
 	mat4 m = translate(mat4(1.0), vec3(0.0f, 0.0f, 0.0f));
 	m = rotate(m, 3.14159f, vec3(0.0f, 1.0f, 0.0f));
 	g_mesh.modelMat = scale(m, vec3(0.5f, 0.5f, 0.5f));

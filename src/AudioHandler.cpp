@@ -82,8 +82,6 @@ void AudioHandler::stop()
 {
 	is_playing = false;
 	PlaySound(0, 0, 0);
-	delete sample_buffer; //delete whatever might have been in the sample buffer before
-	//^no reason to keep it around -- pause functionality is yet to be considered.
 }
 
 /// <summary>
@@ -105,7 +103,7 @@ void AudioHandler::parse() //implementation inspired by this tutorial: https://c
 }
 
 /// <summary>
-/// Compute the FFT and overwrite the float values for average magnitudes of low and high frequency waves.
+/// Compute the FFT and overwrite the float values for average magnitudes of low and high frequency waves
 /// Some parts were adapted from <a href="https://cindybui.me/pages/blogs/visual_studio_0#fftwDemocode">an online tutorial by Cindy Bui</a>
 /// </summary>
 /// <param name="time">= time (seconds) since the song began</param>
